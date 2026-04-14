@@ -1,0 +1,583 @@
+package com.lenha.createBKAVexcelFile.convert.excelTo3bc;
+
+import com.lenha.createBKAVexcelFile.dao.SetupData;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class ReadExcel {
+    private static final int HANG_MA_DON = 1;
+    private static final int COT_MA_DON = 2;
+    private static final int HANG_NGAY_THANG = 0;
+    private static final int HANG_KAKOU_NO = 2;
+    private static final int COT_CHECK_FILE_EXCEL_HOP_LE = 0;
+    private static final int COT_NGAY_THANG = 2;
+    private static final String TEXT_NGAY_THANG = "納期  ［";
+    private static final String TEXT_MA_DON = "受注NO  ［";
+    private static final String TEXT_KAKOU_NO = "加工指示NO  ［";
+
+    // link của file excel
+    private static String excelPath = "";
+
+    private static final int HANG_MA_VAT_LIEU = 2;
+    private static final int HANG_TEN_KHACH_HANG = 0;
+    private static final int HANG_NOI_GIAO_HANG = 1;
+    private static final int COT_MA_VAT_LIEU = 8;
+    private static final int COT_TEN_KHACH_HANG = 8;
+    private static final int COT_NOI_GIAO_HANG = 8;
+    private static final int HANG_KHOI_LUONG_RIENG = 6;
+    private static final int COT_KHOI_LUONG_RIENG = 1;
+    public static final int COT_SO_LUONG_SAN_PHAM = 1;
+    public static final int COT_CHIEU_DAI_SAN_PHAM = 0;
+    // lấy hàng đầu tiên chứa chiều dài số lượng sản phẩm
+    public static final int HANG_DAU_TIEN_CHUA_SAN_PHAM = 9;
+    private static final int CAC_THONG_SO_CUA_DON_HANG = 10;
+    private static XSSFWorkbook workbook;
+
+    public static boolean readExcelFile(String fileExcelPath, Map<String[], List<Map.Entry<Double, Integer>>> toriaiSheets) throws FileNotFoundException {
+        // lấy địa chỉ file excel
+        excelPath = fileExcelPath;
+
+        // biến kiểm tra trong danh sách các sheet tính vật liệu có sheet nào đó có vật liệu không giống với các vật liệu đã cài đặt sẵn trong chương trình không,
+        // nếu có thì sẽ thay vật liệu của toàn bộ các sheet bằng bộ vật liệu tự cho trong danh sách dự phòng đã tạo khi khởi tạo chương trình
+        // bộ vật liệu dự phòng lấy từ file excel VAT_LIEU_DU_PHONG.xlsx
+        boolean co1VatLieuKhongTonTaiHoacVatLieuTrungNhau = false;
+
+        try (FileInputStream excelFileFis = new FileInputStream(excelPath)) {
+            workbook = new XSSFWorkbook(excelFileFis);
+            /*
+            test
+            // lấy sheet đầu tiên
+//            var sheet = workbook.getSheetAt(0);
+            Sheet sheet0 = workbook.getSheetAt(0);
+            // lấy số lượng hàng
+            int rowCount = sheet0.getPhysicalNumberOfRows();
+            // lấy số lượng cột
+            int colCount = sheet0.getRow(0).getPhysicalNumberOfCells();*/
+
+            // lấy số lượng sheets
+            int sheetCount = workbook.getNumberOfSheets();
+
+            // tạo set để lưu các loại vật liệu trên các sheet
+            // nếu có 2 vật liệu giống nhau sẽ bị gộp làm 1, có thể là giống vật liệu nhưng khác màu
+            // khi đấy sẽ so sánh số vật liệu trong set và số sheet, nếu khác nhau tức là có 2 loại vật liệu trùng nhau
+            // nếu nhập vào 3bc sẽ không đúng nữa do trùng vật liệu nhưng khác màu, giải pháp là thay tất cả các vật liệu trong các sheet bằng vật liệu thay thế
+            Set<String> cacVatLieu = new HashSet<>();
+
+            // lặp qua các sheet trong excel
+            for (Sheet sheet : workbook) {
+                // lấy mã vật liệu
+                String kousyu = getFullStringCellValue(sheet.getRow(HANG_MA_VAT_LIEU).getCell(COT_MA_VAT_LIEU));
+
+                // lấy tên khách hàng
+                String tenKhachHang = getFullStringCellValue(sheet.getRow(HANG_TEN_KHACH_HANG).getCell(COT_TEN_KHACH_HANG));
+
+                // lấy nơi giao hàng
+                String noiGiaoHang = getFullStringCellValue(sheet.getRow(HANG_NOI_GIAO_HANG).getCell(COT_NOI_GIAO_HANG));
+
+                // lấy ngày tháng
+                // lấy giá trị text của ngày tháng rồi đổi sang số thực vì ô này là số thực có phần thập phân ẩn không hiển thị trên excel nên không thể đổi sang ngày tháng
+                // sau đó đổi sang số nguyên rồi đổi sang ngày tháng
+                // không thể dùng hàm chuyển ô này sang String toàn số luôn vì nó đổi phần thập phân từ dấu , sang dấu . khiến nó không thể chuyển đổi sang double
+                // khi người dùng sửa giá trị ô này nó sẽ chuyển về định dạng String Không phải numeric nữa, nếu có chữ nó sẽ lấy ra chữ và chuyển đổi
+                // dạng số thực sẽ bị lỗi, chương trình xử lý lỗi và thông báo file không hợp lệ cho người dùng để họ sửa lại
+                double ngayThang = Double.parseDouble((getFullStringCellValue(sheet.getRow(HANG_NGAY_THANG).getCell(COT_NGAY_THANG))));
+                int ngayThangInt = (int) ngayThang;
+                String ngayThangString = String.valueOf(ngayThangInt);
+                int ngayThangLength = ngayThangString.length();
+                if(ngayThangLength  != 8){
+                    throw new NumberFormatException("Ngày tháng không hợp lệ");
+                }
+
+                // thêm đoạn text trắng vào ngày tháng cho đủ 40 kí tự
+                for (int i = ngayThangLength; i < 40; i++) {
+                    ngayThangString = ngayThangString.concat(" ");
+                }
+
+                // lấy khối lượng riêng
+                double khoiLuongRieng;
+                Cell khoiLuongRiengCell = sheet.getRow(HANG_KHOI_LUONG_RIENG).getCell(COT_KHOI_LUONG_RIENG);
+                khoiLuongRieng = Math.abs(Double.parseDouble(getStringNumberCellValue(khoiLuongRiengCell)));
+
+                // lấy mã đơn hàng, bỏ qua chữ chỉ lấy số, chuyển toàn bộ số tiếng Nhật nếu có sang latin
+                String maDonHang = getStringNumberCellValue(sheet.getRow(HANG_MA_DON).getCell(COT_MA_DON)).trim();
+
+
+                // nếu mã rỗng thì đặt tên mặc định
+                if (maDonHang.isBlank()) {
+                    maDonHang = "No_Name";
+                }
+
+                // gọi hàm chuẩn hóa tên tiếng Nhật
+                tenKhachHang = chuanHoaTextTiengNhatSangLatin(tenKhachHang);
+                noiGiaoHang = chuanHoaTextTiengNhatSangLatin(noiGiaoHang);
+
+                int maDonHangLength = maDonHang.length();
+                // nếu mã đơn hàng dài hơn 40 kí tự thì cắt cho còn 40
+                if (maDonHangLength > 40) {
+                    maDonHang = maDonHang.substring(0, 40);
+                }
+
+                // nếu mã đơn hàng ít hơn 40 kí tự thì cộng thêm các khoảng trống cho đủ 40 kí tự
+                for (int i = maDonHangLength; i < 40; i++) {
+                    maDonHang = maDonHang.concat(" ");
+                }
+
+
+                // tạo mảng chứa khối lượng riêng, mã vật liệu và các thông số khác của đơn hàng
+                // phần tử 1 là khối lượng riêng
+                // phần tử 2 là mã vật liệu
+                // phần tử 3 - 6 là các size của vật liệu
+                // phần tử 7 là mã đơn hàng
+                // phần tử 8 là tên khách hàng
+                // phần tử 9 là nơi giao hàng
+                // phần tử 10 là ngày tháng
+                String[] cacThongSoCuaDonHang = new String[CAC_THONG_SO_CUA_DON_HANG];
+                // khởi tạo cho mảng để tránh bị null trong trường hợp vật liệu không có trong bộ vật liệu cho trước
+                // thì mảng chứa vật liệu này sẽ không được gán nên cần khởi tạo cho vật liệu các giá trị rỗng
+                cacThongSoCuaDonHang[0] = "";
+                cacThongSoCuaDonHang[1] = "";
+                cacThongSoCuaDonHang[2] = "";
+                cacThongSoCuaDonHang[3] = "";
+                cacThongSoCuaDonHang[4] = "";
+                cacThongSoCuaDonHang[5] = "";
+                cacThongSoCuaDonHang[6] = maDonHang;
+                cacThongSoCuaDonHang[7] = tenKhachHang;
+                cacThongSoCuaDonHang[8] = noiGiaoHang;
+                cacThongSoCuaDonHang[9] = ngayThangString;
+//                System.out.println("khoi tao" + cacThongSoCuaDonHang[0]);
+
+
+                // gọi hàm phân tách các thông số của vật liệu rồi gán nó + khối lượng riêng vào mảng cacThongSoCuaDonHang
+                // chứa các thông số vật liệu để phục vụ cho chuyển đổi sang 3bc
+                // lấy kết quả vật liệu của sheet tính vật liệu này có trong bộ vật liệu cho trước không
+                boolean vatLieuTonTai = convertKousyuVaKhoiLuongRiengExcelTo3bc(kousyu, khoiLuongRieng, cacThongSoCuaDonHang, cacVatLieu);
+
+                // nếu sheet này vật liệu không có trong bộ vật liệu cho trước thì cho biến kiểm tra là true
+                if (!vatLieuTonTai) {
+                    co1VatLieuKhongTonTaiHoacVatLieuTrungNhau = true;
+                }
+
+                // lấy hàng cuối cùng chứa dữ liệu trong cột a, chính là hàng cuối cùng chứa chiều dài số lượng sản phẩm
+                int lastRowSeihin = getLastRowWithDataInColumn(sheet, COT_CHIEU_DAI_SAN_PHAM); // Cột A = index 0
+//                System.out.println(kousyu + " " + lastRowSeihin);
+
+                // map chứa các cặp chiều dài và số lượng sản phẩm của sheet đang duyệt
+                List<Map.Entry<Double, Integer>> seihins = new LinkedList<>();
+//                Map<Double, Integer> seihins = new LinkedHashMap<>();
+
+                // duyệt qua các hàng chứa sản phẩm trong sheet đang duyệt và thêm nó vào map sản phẩm
+                for (int i = HANG_DAU_TIEN_CHUA_SAN_PHAM; i <= lastRowSeihin; i++) {
+                    Row row = sheet.getRow(i);
+                    // lấy chiều dài sản phẩm
+                    Double seihinZenchou = Math.abs(Double.parseDouble(getStringNumberCellValue(row.getCell(COT_CHIEU_DAI_SAN_PHAM))));
+                    // lấy số lượng sản phẩm
+                    Integer seihinHonsuu = Math.abs((int) Double.parseDouble(getStringNumberCellValue(row.getCell(COT_SO_LUONG_SAN_PHAM))));// do có thể kết quả trả về là số thực nên cần chuyển String sang số thực trước rồi mới chuyển sang int
+
+//                    System.out.println(seihinZenchou + " : " + seihinHonsuu);
+                    // thêm các thông số sản phẩm vào map
+//                    seihins.put(seihinZenchou, seihinHonsuu);
+                    seihins.add(new AbstractMap.SimpleEntry<>(seihinZenchou, seihinHonsuu));
+
+                }
+
+                // thêm toriai của sheet đang duyệt vào map các toriai
+                toriaiSheets.put(cacThongSoCuaDonHang, seihins);
+
+            }
+
+            System.out.println("list vat lieu: " + cacVatLieu);
+            // so sánh số vật liệu và số sheet, nếu nhỏ hơn số sheet tức là có vật liêu trùng nhau, có thể trùng nhưng khác màu
+            // thì gán cho biến cảnh báo
+            if (cacVatLieu.size() < sheetCount) {
+                co1VatLieuKhongTonTaiHoacVatLieuTrungNhau = true;
+            }
+
+            System.out.println("có vật liệu không tồn tại hoặc có vật liệu trùng nhau trong bộ vật liệu cho trước: " + co1VatLieuKhongTonTaiHoacVatLieuTrungNhau);
+
+            // giới hạn số lượng vật liệu là 99
+            if (toriaiSheets.size() > 99) {
+                throw new VerifyError();
+            }
+
+            // nếu có vật liệu dự phòng thì thay thế tất cả vật liệu của các sheet tính vật liệu sang bộ vật liệu dự phông
+            // phải thay đổi tất cả các vật liệu vì nếu chỉ thay đổi vật liệu không có kia thì vật liệu dự phòng đã thay đổi có thể trùng với
+            // vật liệu đang tồn tại trong 1 tính vật liệu của sheet khác, khi này tính vật liệu sẽ không còn đúng nữa
+            if (co1VatLieuKhongTonTaiHoacVatLieuTrungNhau) {
+                // tạo biến đếm để gọi đúng thứ tự vật liệu dự phòng trong list dự phòng
+                // phải dùng đến AtomicInteger chứ ko phải int vì int không dùng được trong biểu thức lamda ở dưới
+                AtomicInteger thuTuVatLieuDuPhong = new AtomicInteger();
+                // lấy bộ vật liệu dự phòng
+                List<String[]> vatLieuDuPhong = SetupData.getInstance().getVatLieuDuPhong();
+                // lặp qua bộ vật liệu gốc và thay thế chúng bằng bộ vật liệu dự phòng
+                toriaiSheets.forEach((vatLieu, cacSanPham) -> {
+//                        System.out.println(Arrays.toString(vatLieu));
+                    // lấy ra vật liệu dự phòng theo đúng thứ tự đang duyệt
+                    String[] vatLieuMoi = vatLieuDuPhong.get(thuTuVatLieuDuPhong.get());
+                    // thay thế
+                    vatLieu[0] = vatLieuMoi[0];
+                    vatLieu[1] = vatLieuMoi[1];
+                    vatLieu[2] = vatLieuMoi[2];
+                    vatLieu[3] = vatLieuMoi[3];
+                    vatLieu[4] = vatLieuMoi[4];
+                    vatLieu[5] = vatLieuMoi[5];
+                    // tăng biến nhớ lên 1
+                    thuTuVatLieuDuPhong.set(thuTuVatLieuDuPhong.get() + 1);
+                });
+            }
+
+
+        } catch (IOException e) {
+            if (e instanceof FileNotFoundException) {
+                System.out.println("File đang được mở bởi người dùng khác");
+                throw new FileNotFoundException();
+            }
+            System.out.println(e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+
+
+        return co1VatLieuKhongTonTaiHoacVatLieuTrungNhau;
+    }
+
+    /**
+     * chuuyển đổi các tên tiếng Nhật về định dạng đọc được trong 3bc, dúng  40 kí tự(chũ nhật tính 2 kí tự) nếu quá sẽ bị cắt cho nhỏ hơn hoặc bằng 40 kí tự
+     *
+     * @param tenTiengNhat tên gốc
+     * @return tên định dạng lại
+     */
+    private static String chuanHoaTextTiengNhatSangLatin(String tenTiengNhat) {
+        int tenTiengNhatLength = WidthCalculatorJapanText.computeWidth(tenTiengNhat);
+
+        int khoangCachToiGioiHanTenKhachHang = tenTiengNhatLength - 40;
+
+        if (khoangCachToiGioiHanTenKhachHang > 0) {
+            try {
+                tenTiengNhat = tenTiengNhat.substring(0, tenTiengNhat.length() - khoangCachToiGioiHanTenKhachHang);
+
+            } catch (Exception e) {
+                tenTiengNhat = "                                        ";
+                System.out.println("lỗi cắt tên");
+            }
+        } else if (khoangCachToiGioiHanTenKhachHang < 0) {
+            // nếu tên khách hàng ít hơn 40 kí tự thì cộng thêm các khoảng trống cho đủ 40 kí tự
+            for (int i = 0; i < Math.abs(khoangCachToiGioiHanTenKhachHang); i++) {
+                tenTiengNhat = tenTiengNhat.concat(" ");
+            }
+        }
+
+        System.out.println("độ dài theo tiếng nhật: " + tenTiengNhatLength);
+        return tenTiengNhat;
+    }
+
+    /**
+     * chuyển đổi khối lượng riêng và mã vật liệu của Excel sang mảng để ghi vào 3bc
+     *
+     * @param kousyu                    mã vật liệu kiểu Excel
+     * @param khoiLuongRieng            khối lượng riêng của Excel
+     * @param kousyuVaKhoiLuongRiengArr mảng để ghi vào 3bc
+     */
+    private static boolean convertKousyuVaKhoiLuongRiengExcelTo3bc(String kousyu, double khoiLuongRieng, String[] kousyuVaKhoiLuongRiengArr, Set<String> cacVatLieu) {
+        // kí hiệu vật liệu khi dùng trên 3bc
+        String kiHieu3bc = "";
+
+        // tạo list chứa các cặp ký hiệu  gồm mã vật liệu trên excel và mã tương ứng của nó trên 3bc
+        ArrayList<String[]> cacCapKyHieuVatLieuExCelVa3bc = new ArrayList<>();
+        String[] maVLExcel1 = {"アングル", "L"};
+        String[] maVLExcel2 = {"チャンネル", "M"};
+        String[] maVLExcel3 = {"H形鋼", "H"};
+        String[] maVLExcel4 = {"I形鋼", "H"};
+        String[] maVLExcel5 = {"平鋼", "FB"};
+        String[] maVLExcel6 = {"軽量溝形鋼", "CA"};
+        String[] maVLExcel7 = {"C形鋼", "C"};
+        String[] maVLExcel8 = {"角パイプ", "K"};
+
+        cacCapKyHieuVatLieuExCelVa3bc.add(maVLExcel1);
+        cacCapKyHieuVatLieuExCelVa3bc.add(maVLExcel2);
+        cacCapKyHieuVatLieuExCelVa3bc.add(maVLExcel3);
+        cacCapKyHieuVatLieuExCelVa3bc.add(maVLExcel4);
+        cacCapKyHieuVatLieuExCelVa3bc.add(maVLExcel5);
+        cacCapKyHieuVatLieuExCelVa3bc.add(maVLExcel6);
+        cacCapKyHieuVatLieuExCelVa3bc.add(maVLExcel7);
+        cacCapKyHieuVatLieuExCelVa3bc.add(maVLExcel8);
+
+        // biến kiểm tra xem vật liệu có trong bộ vật liệu cho trước không
+        boolean vatLieuTonTai = false;
+        // duyệt qua list các cặp ký hiệu để xem vật liệu excel hàm truyền vào khớp với cặp ký hiệu nào thì tìm ra được các size của vật liệu đó và
+        // ký hiệu kiểu 3bc tương ứng của nó
+        // sau đó gọi hàm phân tách vật liệu excel thành các size riêng biệt rồi thêm các size đó + khối lượng riêng + ký hiệu kiêu 3bc vào mảng thông tin
+        for (String[] capKyHieu : cacCapKyHieuVatLieuExCelVa3bc) {
+            // kí hiệu kiểu excel
+            String kiHieuExcel = capKyHieu[0];
+            // nếu vật liệu excel có chứa ký hiệu kiểu excel đang lặp thì lấy ra được ký kiệu kiểu 3bc tương ứng trong mảng đang được lặp
+            if (kousyu.contains(kiHieuExcel)) {
+                // nếu có tồn tại trong bộ vật liệu cho trước thì cho biến nhớ là true
+                vatLieuTonTai = true;
+                // lấy ra ký hiệu kiểu 3bc tương ứng của nó
+                kiHieu3bc = capKyHieu[1];
+                // gọi hàm phân tách vật liệu excel thành các size riêng biệt rồi thêm các size đó + khối lượng riêng + ký hiệu kiêu 3bc vào mảng thông tin
+                themKosyuVaKhoiLuongRiengVaoMangCua3bc(kousyu, khoiLuongRieng, kousyuVaKhoiLuongRiengArr, kiHieuExcel, kiHieu3bc, cacVatLieu);
+                break;
+            }
+        }
+
+        // trả về biến kiểm tra
+        return vatLieuTonTai;
+
+    }
+
+    /**
+     * phân tách vật liệu excel thành các size riêng biệt rồi thêm các size đó + khối lượng riêng + ký hiệu kiêu 3bc vào mảng thông tin
+     *
+     * @param kousyu                    vật liệu kiểu excel
+     * @param khoiLuongRieng            khối lượng riêng
+     * @param kousyuVaKhoiLuongRiengArr mảng sẽ chứa tất các các thông số vật liệu cần thiết cho 3bc
+     * @param kiHieuExcel               ký hiệu kiểu excel
+     * @param kiHieu3bc                 ký hiệu kiểu 3bc
+     */
+    private static void themKosyuVaKhoiLuongRiengVaoMangCua3bc(String kousyu, double khoiLuongRieng, String[] kousyuVaKhoiLuongRiengArr, String kiHieuExcel, String kiHieu3bc, Set<String> cacVatLieu) {
+        // mảng sau khi phân tách vật liệu thành các thành phần sau khi tách vật liệu thành các thành phần thông qua kí hiệu kiểu excel
+        String[] kousyuMarkArr;
+        // mảng chứa các size của vật liệu
+        String[] kousyuSizeArr;
+        // tạo 4 size vì chỉ có tối đa 4 size
+        double size1 = 0;
+        double size2 = 0;
+        double size3 = 0;
+        double size4 = 0;
+
+        // lấy mảng sau khi phân tách vật liệu
+        kousyuMarkArr = kousyu.split(kiHieuExcel);
+        // lấy mảng chứa các size vật liệu, chính là phần tử cuối cùng của mảng sau khi phân tách vật liệu
+        kousyuSizeArr = kousyuMarkArr[kousyuMarkArr.length - 1].split("X");
+
+        // gán giá trị cho các size vừa lấy được
+        // do size 4 không chắc có hay không nên cần phải bắt lỗi
+        // nếu không có thì size 4 vẫn được gán giá trị từ trước
+        try {
+            size1 = Math.abs(Double.parseDouble(extractNumberString(kousyuSizeArr[0]))) ;
+            size2 = Math.abs(Double.parseDouble(extractNumberString(kousyuSizeArr[1])));
+            size3 = Math.abs(Double.parseDouble(extractNumberString(kousyuSizeArr[2])));
+            size4 = Math.abs(Double.parseDouble(extractNumberString(kousyuSizeArr[3])));
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("phần tử này đã vượt giới hạn chứa các size");
+        }
+
+        // nếu vật liệu là M tức là U trong 3bc, thì cần cho gán giá trị cho size4 vì
+        // khi lấy các size từ excel thì U chỉ có 3 size trong khi 3bc yêu cầu 4 size nên gán mặc định size4 cho U để máy 3bc chấp nhận
+        if (kiHieu3bc.equalsIgnoreCase("M")){
+            size4 = 10;
+        }
+        // gán các thông số size + khối lượng riêng + ký hiệu kiêu 3bc đã tìm được vào mảng thông tin
+        kousyuVaKhoiLuongRiengArr[0] = String.valueOf(khoiLuongRieng);
+        kousyuVaKhoiLuongRiengArr[1] = kiHieu3bc;
+        kousyuVaKhoiLuongRiengArr[2] = String.valueOf(size1);
+        kousyuVaKhoiLuongRiengArr[3] = String.valueOf(size2);
+        kousyuVaKhoiLuongRiengArr[4] = String.valueOf(size3);
+        kousyuVaKhoiLuongRiengArr[5] = String.valueOf(size4);
+        cacVatLieu.add(kiHieu3bc + size1 + size2 + size3 + size4);
+//        System.out.println(Arrays.toString(kousyuVaKhoiLuongRiengArr));
+
+    }
+
+    /**
+     * Trích xuất và ghép các chữ số trong chuỗi theo thứ tự xuất hiện.
+     * - Chuyển full-width digits/dot/comma/sign về ASCII.
+     * - Bỏ mọi ký tự không phải chữ số (ngoại trừ 1 dấu thập phân đầu tiên).
+     * - Bỏ hoàn toàn các dấu + / - (cả full-width) nếu có.
+     * - Trả về chuỗi rỗng nếu không có chữ số hợp lệ.
+     */
+    public static String extractNumberString(String input) {
+        if (input == null) return "";
+
+        String s = normalizeFullWidth(input);
+
+        StringBuilder out = new StringBuilder();
+        boolean decimalUsed = false;
+
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+
+            if (c >= '0' && c <= '9') {
+                out.append(c);
+            } else if ((c == '.' || c == ',') && !decimalUsed) {
+                // Dùng '.' làm dấu thập phân nội bộ; nếu gặp ',' thì đã normalize nhưng vẫn xét chung
+                out.append('.');
+                decimalUsed = true;
+            } else {
+                // Bỏ qua mọi ký tự khác, bao gồm dấu '+' hoặc '-' (và full-width tương ứng)
+            }
+        }
+
+        String res = out.toString();
+
+        // Không chấp nhận kết quả rỗng hoặc chỉ là dấu thập phân
+        if (res.isEmpty()) return "";
+        if (res.equals(".")) return "";
+
+        // Nếu bắt đầu bằng '.' -> thêm '0' trước
+        if (res.charAt(0) == '.') res = "0" + res;
+
+        return res;
+    }
+
+    /**
+     * Chuyển các ký tự full-width thường gặp ở tiếng Nhật về ASCII tương ứng:
+     * - '０'..'９' -> '0'..'9'
+     * - '．' -> '.'
+     * - '，' -> ','
+     * - '－' -> '-' (sẽ bị bỏ sau khi normalize)
+     * - '＋' -> '+' (sẽ bị bỏ sau khi normalize)
+     */
+    private static String normalizeFullWidth(String s) {
+        if (s == null) return null;
+        StringBuilder sb = new StringBuilder(s.length());
+        for (char c : s.toCharArray()) {
+            if (c >= '０' && c <= '９') {
+                sb.append((char) ('0' + (c - '０')));
+            } else if (c == '．') {
+                sb.append('.');
+            } else if (c == '，') {
+                sb.append(',');
+            } else if (c == '－') {
+                sb.append('-');
+            } else if (c == '＋') {
+                sb.append('+');
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * lấy giá trị của cell và trả về dưới dạng String
+     *
+     * @param cell cell truyền vào
+     * @return giá trị chuỗi
+     */
+    public static String getFullStringCellValue(Cell cell) {
+        if (cell != null) {
+            // lấy kiểu của cell rồi gọi hàm lấy giá trị tương ứng theo kiểu đó, chuyển giá trị về String và trả về
+            switch (cell.getCellType()) {
+                case STRING:
+                    return cell.getStringCellValue().trim();
+                case NUMERIC, FORMULA:
+                    return String.valueOf(cell.getNumericCellValue()).trim();
+                default:
+                    System.out.println("Ô không chứa dữ liệu hợp lệ.");
+            }
+        }
+        return "";
+    }
+
+    /**
+     * lấy giá trị của cell và trả về dưới dạng String chỉ chứa các chữ số
+     *
+     * @param cell cell truyền vào
+     * @return giá trị chuỗi chỉ chứa các chữ số
+     */
+    public static String getStringNumberCellValue(Cell cell) {
+        if (cell != null) {
+            // lấy kiểu của cell rồi gọi hàm lấy giá trị tương ứng theo kiểu đó, chuyển giá trị về String và trả về
+            switch (cell.getCellType()) {
+                case STRING:
+                    // gọi hàm chỉ lấy giá trị số trong chuỗi truyền giá trị chuỗi của cell lấy được và trả về chuỗi chỉ chứa chữ số
+                    return extractNumberString(cell.getStringCellValue().trim());
+                case NUMERIC, FORMULA:
+                    return extractNumberString(String.valueOf(cell.getNumericCellValue()).trim());
+                default:
+//                    System.out.println("Ô không chứa dữ liệu hợp lệ.");
+            }
+        }
+        return "";
+    }
+
+
+    /**
+     * Hàm tìm hàng cuối cùng có dữ liệu trong một cột
+     *
+     * @param sheet       Sheet cần kiểm tra
+     * @param columnIndex chỉ số cột (0 = cột A)
+     * @return chỉ số hàng (0-based). Nếu không có dữ liệu thì trả về -1
+     */
+    public static int getLastRowWithDataInColumn(Sheet sheet, int columnIndex) {
+        // lấy hàng cuối cùng có chứa dữ liệu của sheet
+        int lastRowNum = sheet.getLastRowNum();
+
+        for (int i = lastRowNum; i >= 0; i--) {
+            // lấy hàng đang duyệt
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                // lấy cell ở cột chỉ định
+                Cell cell = row.getCell(columnIndex);
+                // đảm bảo ô không rỗng thì trả về index hàng đang duyệt
+                if (cell != null && cell.getCellType() != CellType.BLANK) {
+                    // Kiểm tra nếu ô có dữ liệu (Text, Number, Date...)
+                    if (!cell.toString().trim().isEmpty()) {
+                        return i;
+                    }
+                }
+            }
+        }
+        return -1; // Không tìm thấy dữ liệu
+    }
+
+    /**
+     * kiểm tra xem file excel có hợp lệ không(có phải file tính vật liệu không)
+     *
+     * @param excelFilePath
+     * @return
+     * @throws IOException
+     */
+    public static boolean checkExcelcontent(String excelFilePath) throws Exception {
+        workbook = new XSSFWorkbook(excelFilePath);
+        Sheet sheet1 = workbook.getSheetAt(0);
+        // lấy số lượng sheets
+        int sheetCount = workbook.getNumberOfSheets();
+
+        // nếu nhiều hơn 1 sheet thì kiểm tra xem 3 ô trong sheet 1 có giá trị khớp với giá trị của file tính vật liệu không
+        // xem giá trị ngày tháng có đủ 8 chữ số không
+        // nếu có thì trả về kết quả
+        if (sheetCount > 0) {
+            String tieuDeNgayThang = sheet1.getRow(HANG_NGAY_THANG).getCell(COT_CHECK_FILE_EXCEL_HOP_LE).getStringCellValue();
+            String tieuDeMaDon = sheet1.getRow(HANG_MA_DON).getCell(COT_CHECK_FILE_EXCEL_HOP_LE).getStringCellValue();
+            String tieuDeKakouNO = sheet1.getRow(HANG_KAKOU_NO).getCell(COT_CHECK_FILE_EXCEL_HOP_LE).getStringCellValue();
+
+            // lấy giá trị text của ngày tháng rồi đổi sang số thực vì ô này là số thực có phần thập phân ẩn không hiển thị trên excel nên không thể đổi sang ngày tháng
+            // sau đó đổi sang số nguyên rồi đổi sang ngày tháng
+            // không thể dùng hàm chuyển ô này sang String toàn số luôn vì nó đổi phần thập phân từ dấu , sang dấu . khiến nó không thể chuyển đổi sang double
+            // khi người dùng sửa giá trị ô này nó sẽ chuyển về định dạng String Không phải numeric nữa, nếu có chữ nó sẽ lấy ra chữ và chuyển đổi
+            // dang số thực sẽ bị lỗi, chương trình xử lý lỗi và thông báo file không hợp lệ cho người dùng để họ sửa lại
+            // khi sửa lại về toàn số thì sẽ đọc được nhưng vẫn phải đảm bảo chỉ có 8 chữ số
+            double ngayThang = Double.parseDouble((getFullStringCellValue(sheet1.getRow(HANG_NGAY_THANG).getCell(COT_NGAY_THANG))));
+            int ngayThangInt = (int) ngayThang;
+
+            String ngayThangString = String.valueOf(ngayThangInt);
+            System.out.println("ngay thang: " + ngayThangString);
+
+            if (
+                    tieuDeNgayThang.equalsIgnoreCase(TEXT_NGAY_THANG) &&
+                            tieuDeMaDon.equalsIgnoreCase(TEXT_MA_DON) &&
+                            tieuDeKakouNO.equalsIgnoreCase(TEXT_KAKOU_NO) &&
+                            ngayThangString.length() == 8
+
+            ) {
+                System.out.println("file hợp lệ");
+
+                return true;
+            }
+        }
+
+        System.out.println("file không hợp lệ");
+
+        // đến đây thì tức là file không vượt qua kiểm tra thì trả về false
+        return false;
+    }
+}
