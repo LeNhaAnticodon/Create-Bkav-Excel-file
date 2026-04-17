@@ -7,6 +7,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -90,7 +91,7 @@ public class ReadExcel {
                 int ngayThangInt = (int) ngayThang;
                 String ngayThangString = String.valueOf(ngayThangInt);
                 int ngayThangLength = ngayThangString.length();
-                if(ngayThangLength  != 8){
+                if (ngayThangLength != 8) {
                     throw new NumberFormatException("Ngày tháng không hợp lệ");
                 }
 
@@ -242,7 +243,6 @@ public class ReadExcel {
         }
 
 
-
         return co1VatLieuKhongTonTaiHoacVatLieuTrungNhau;
     }
 
@@ -361,7 +361,7 @@ public class ReadExcel {
         // do size 4 không chắc có hay không nên cần phải bắt lỗi
         // nếu không có thì size 4 vẫn được gán giá trị từ trước
         try {
-            size1 = Math.abs(Double.parseDouble(extractNumberString(kousyuSizeArr[0]))) ;
+            size1 = Math.abs(Double.parseDouble(extractNumberString(kousyuSizeArr[0])));
             size2 = Math.abs(Double.parseDouble(extractNumberString(kousyuSizeArr[1])));
             size3 = Math.abs(Double.parseDouble(extractNumberString(kousyuSizeArr[2])));
             size4 = Math.abs(Double.parseDouble(extractNumberString(kousyuSizeArr[3])));
@@ -371,7 +371,7 @@ public class ReadExcel {
 
         // nếu vật liệu là M tức là U trong 3bc, thì cần cho gán giá trị cho size4 vì
         // khi lấy các size từ excel thì U chỉ có 3 size trong khi 3bc yêu cầu 4 size nên gán mặc định size4 cho U để máy 3bc chấp nhận
-        if (kiHieu3bc.equalsIgnoreCase("M")){
+        if (kiHieu3bc.equalsIgnoreCase("M")) {
             size4 = 10;
         }
         // gán các thông số size + khối lượng riêng + ký hiệu kiêu 3bc đã tìm được vào mảng thông tin
@@ -536,43 +536,61 @@ public class ReadExcel {
      * @return
      * @throws IOException
      */
-    public static boolean checkExcelcontent(String excelFilePath) throws Exception {
+    public static boolean checkExcelcontent1(String excelFilePath) throws Exception {
         workbook = new XSSFWorkbook(excelFilePath);
         Sheet sheet1 = workbook.getSheetAt(0);
-        // lấy số lượng sheets
-        int sheetCount = workbook.getNumberOfSheets();
 
-        // nếu nhiều hơn 1 sheet thì kiểm tra xem 3 ô trong sheet 1 có giá trị khớp với giá trị của file tính vật liệu không
-        // xem giá trị ngày tháng có đủ 8 chữ số không
-        // nếu có thì trả về kết quả
-        if (sheetCount > 0) {
-            String tieuDeNgayThang = sheet1.getRow(HANG_NGAY_THANG).getCell(COT_CHECK_FILE_EXCEL_HOP_LE).getStringCellValue();
-            String tieuDeMaDon = sheet1.getRow(HANG_MA_DON).getCell(COT_CHECK_FILE_EXCEL_HOP_LE).getStringCellValue();
-            String tieuDeKakouNO = sheet1.getRow(HANG_KAKOU_NO).getCell(COT_CHECK_FILE_EXCEL_HOP_LE).getStringCellValue();
+        // lấy text của các ô tiêu đề cần check
+        String soTienThuHo = sheet1.getRow(0).getCell(2).getStringCellValue();
+        String trongLuong = sheet1.getRow(0).getCell(7).getStringCellValue();
+        String diaChiNguoiNhan = sheet1.getRow(0).getCell(19).getStringCellValue();
+        String loaiHangHoa = sheet1.getRow(0).getCell(20).getStringCellValue();
+        String tenNguoiNhan = sheet1.getRow(0).getCell(21).getStringCellValue();
 
-            // lấy giá trị text của ngày tháng rồi đổi sang số thực vì ô này là số thực có phần thập phân ẩn không hiển thị trên excel nên không thể đổi sang ngày tháng
-            // sau đó đổi sang số nguyên rồi đổi sang ngày tháng
-            // không thể dùng hàm chuyển ô này sang String toàn số luôn vì nó đổi phần thập phân từ dấu , sang dấu . khiến nó không thể chuyển đổi sang double
-            // khi người dùng sửa giá trị ô này nó sẽ chuyển về định dạng String Không phải numeric nữa, nếu có chữ nó sẽ lấy ra chữ và chuyển đổi
-            // dang số thực sẽ bị lỗi, chương trình xử lý lỗi và thông báo file không hợp lệ cho người dùng để họ sửa lại
-            // khi sửa lại về toàn số thì sẽ đọc được nhưng vẫn phải đảm bảo chỉ có 8 chữ số
-            double ngayThang = Double.parseDouble((getFullStringCellValue(sheet1.getRow(HANG_NGAY_THANG).getCell(COT_NGAY_THANG))));
-            int ngayThangInt = (int) ngayThang;
+        // kiểm tra các text đã lấy có khớp với text chuẩn không, nếu có trả về true
+        if (soTienThuHo.equals("Số tiền thu hộ") &&
+                        trongLuong.equals("Trọng lượng") &&
+                        diaChiNguoiNhan.equals("Người nhận Địa chỉ") &&
+                        loaiHangHoa.equals("Loại hàng hóa") &&
+                        tenNguoiNhan.equals("Tên người nhận")) {
+            System.out.println("file hợp lệ");
+            return true;
+        }
 
-            String ngayThangString = String.valueOf(ngayThangInt);
-            System.out.println("ngay thang: " + ngayThangString);
+        System.out.println("file không hợp lệ");
 
-            if (
-                    tieuDeNgayThang.equalsIgnoreCase(TEXT_NGAY_THANG) &&
-                            tieuDeMaDon.equalsIgnoreCase(TEXT_MA_DON) &&
-                            tieuDeKakouNO.equalsIgnoreCase(TEXT_KAKOU_NO) &&
-                            ngayThangString.length() == 8
+        // đến đây thì tức là file không vượt qua kiểm tra thì trả về false
+        return false;
+    }
 
-            ) {
-                System.out.println("file hợp lệ");
+    /**
+     * kiểm tra xem file excel có hợp lệ không(có phải file tính vật liệu không)
+     *
+     * @param excelFilePath
+     * @return
+     * @throws IOException
+     */
+    public static boolean checkExcelcontent2(String excelFilePath) throws Exception {
+        Workbook workbook;
+        try (InputStream inputStream = new FileInputStream(excelFilePath)) {
+            workbook = WorkbookFactory.create(inputStream);
+        }
 
-                return true;
-            }
+//        workbook = new XSSFWorkbook(excelFilePath);
+
+        Sheet sheet1 = workbook.getSheetAt(0);
+
+        // lấy text của các ô tiêu đề cần check
+        String soTienThuHo = sheet1.getRow(0).getCell(2).getStringCellValue();
+        String trongLuong = sheet1.getRow(0).getCell(7).getStringCellValue();
+        String diaChiNguoiNhan = sheet1.getRow(0).getCell(19).getStringCellValue();
+        String loaiHangHoa = sheet1.getRow(0).getCell(20).getStringCellValue();
+        String tenNguoiNhan = sheet1.getRow(0).getCell(21).getStringCellValue();
+
+        // kiểm tra các text đã lấy có khớp với text chuẩn không, nếu có trả về true
+        if (true) {
+            System.out.println("file hợp lệ");
+            return true;
         }
 
         System.out.println("file không hợp lệ");

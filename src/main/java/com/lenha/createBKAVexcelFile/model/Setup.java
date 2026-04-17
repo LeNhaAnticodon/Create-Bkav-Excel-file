@@ -2,9 +2,19 @@ package com.lenha.createBKAVexcelFile.model;
 
 public class Setup {
     private String linkExcelFile = "";
-    private String link3bcToriaiFile = "";
-    private String linkSave3BCFileDir = "";
+    private String linkExcelFile2 = "";
     private String linkSaveExcelFileDir = "";
+    private String linkSave3BCFileDir = "";//xóa
+
+    public String getLinkExcelFile2() {
+        return linkExcelFile2;
+    }
+
+    public void setLinkExcelFile2(String linkExcelFile2) {
+        this.linkExcelFile2 = linkExcelFile2;
+    }
+
+    private String link3bcToriaiFile = "";//xóa
     private String lang = "";
 
     public String getLinkExcelFile() {

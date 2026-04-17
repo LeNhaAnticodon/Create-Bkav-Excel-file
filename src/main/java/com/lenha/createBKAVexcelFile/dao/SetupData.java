@@ -23,7 +23,7 @@ public class SetupData {
     // biến thể hiện duy nhất của class
     private static SetupData instance;
     // tên file lưu cài đặt của chương trình
-    private static String FILE_SETUP_NAME = "setup_data.set";
+    private static String FILE_SETUP_NAME = "setup_data_ke_toan.set";
     // list các file excel đã tạo
     private final ObservableList<ExcelFile> excelFiles = FXCollections.observableArrayList();
     // map chứa key là text của các ngôn ngữ và value là từ khóa của câu đó trong file properties languagesMap
@@ -38,7 +38,7 @@ public class SetupData {
     // ví dụ: C:\Users\HuanTech PC\AppData\Roaming\convert pdf to chl
     private static final String appDataPath = System.getenv("APPDATA");
     // đường dẫn thư mục lưu cài đặt của chương trình từ địa chỉ app data đã lấy được ở trên
-    private static final Path myAppPath = Paths.get(appDataPath, "Convert Toriai Both Excel and 3BC");
+    private static final Path myAppPath = Paths.get(appDataPath, "Convert hoa don Excel to hoa don BKAV Excel");
     // list chứa các control UI cần để thay đổi ngôn ngữ hiển thị
     private final ObservableList<Object> controls = FXCollections.observableArrayList();
 
@@ -53,7 +53,7 @@ public class SetupData {
      */
     private SetupData() {
         // tạo đường dẫn đến file cài đặt từ thư mục lưu cài đặt (link thư mục appdata + tên file setup sẽ tạo)
-        FILE_SETUP_NAME = myAppPath.toAbsolutePath() + "\\setup_data.set";
+        FILE_SETUP_NAME = myAppPath.toAbsolutePath() + "\\setup_data_ke_toan.set";
         // tạo path của đường dẫn trên
         pathFile = Paths.get(FILE_SETUP_NAME);
 
@@ -261,6 +261,7 @@ public class SetupData {
 
 
 
+        /*
         // lấy ra list các size vật liệu dự phòng đùng trong trường hợp các vật liệu trong excel không khớp với các vật liệu cài sẵn
         // thì bỏ vật liệu không khớp đó đi và gán cho nó vật liệu dự phòng này
         try (InputStream fileVatLieuDuPhong = SetupData.class.getResourceAsStream("/com/lenha/createBKAVexcelFile/sampleFiles/VAT_LIEU_DU_PHONG.xlsx")) {
@@ -287,9 +288,9 @@ public class SetupData {
             }
 
             // in ra kết quả
-            /*vatLieuDuPhong.forEach(size -> {
+            *//*vatLieuDuPhong.forEach(size -> {
                 System.out.println(size[1] + ": " + size[2] + ": " + size[3] + ": " + size[4] + ": " + size[5] + ": " + size[0] + ": " );
-            });*/
+            });*//*
 
 
         } catch (IOException e) {
@@ -300,6 +301,7 @@ public class SetupData {
                 throw new RuntimeException(ex);
             }
         }
+        */
     }
 
     /**
@@ -334,6 +336,19 @@ public class SetupData {
      */
     public void setLinkExcelFile(String linkExcelFile) {
         setup.setLinkExcelFile(linkExcelFile);
+        try {
+            saveSetup();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * set link của file excel thứ 2 chứa các sản phẩm chuẩn cho đối tượng cài đặt và lưu vào file
+     * @param linkExcelFile2 link file pdf
+     */
+    public void setLinkExcelFile2(String linkExcelFile2) {
+        setup.setLinkExcelFile2(linkExcelFile2);
         try {
             saveSetup();
         } catch (IOException e) {
@@ -391,7 +406,7 @@ public class SetupData {
     }
 
     /**
-     * @return list chứa các file chl đã tạo
+     * @return list chứa các file excel đã tạo
      */
     public ObservableList<ExcelFile> getExcelFile() {
         return excelFiles;
@@ -423,14 +438,18 @@ public class SetupData {
             while (!eof) {
                 try {
 
-                    String linkPdfFile = dis.readUTF();
+                    String linkExcelFile = dis.readUTF();
+                    String linkExcelFile2 = dis.readUTF();
                     String linkSaveCvsFileDir = dis.readUTF();
                     String lang = dis.readUTF();
                     String linkSave3bcFileDir = dis.readUTF();
                     String linkSaveExcelFileDir = dis.readUTF();
 
-                    setup.setLinkExcelFile(linkPdfFile);
+                    setup.setLinkExcelFile(linkExcelFile);
                     System.out.println(":" + setup.getLinkExcelFile());
+
+                    setup.setLinkExcelFile2(linkExcelFile2);
+                    System.out.println(":" + setup.getLinkExcelFile2());
 
                     setup.setLink3bcToriaiFile(linkSaveCvsFileDir);
                     System.out.println(":" + setup.getLink3bcToriaiFile());
@@ -476,6 +495,7 @@ public class SetupData {
         // ghi file nhị phân
         try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(pathFile)))) {
             dos.writeUTF(setup.getLinkExcelFile());
+            dos.writeUTF(setup.getLinkExcelFile2());
             dos.writeUTF(setup.getLink3bcToriaiFile());
             dos.writeUTF(setup.getLang());
             dos.writeUTF(setup.getLinkSave3BCFileDir());
