@@ -4,6 +4,18 @@ public class Setup {
     private String linkExcelFile = "";
     private String linkExcelFile2 = "";
     private String linkSaveExcelFileDir = "";
+
+    private double heSo;
+
+
+    public double getHeSo() {
+        return heSo;
+    }
+
+    public void setHeSo(double heSo) {
+        this.heSo = heSo;
+    }
+
     private String linkSave3BCFileDir = "";//xóa
 
     public String getLinkExcelFile2() {

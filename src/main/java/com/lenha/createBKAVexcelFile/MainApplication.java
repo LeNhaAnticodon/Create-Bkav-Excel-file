@@ -18,7 +18,7 @@ public class MainApplication extends Application {
         // Thiết lập biểu tượng cho Stage
         stage.getIcons().add(icon);
 
-        FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("convertExcelAnd3bc.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("convertExcelToBkavExcel.fxml"));
 
         Scene scene = new Scene(fxmlLoader.load());
         stage.setTitle("CHUYỂN ĐỔI QUA LẠI GIỮA CÁC FILE EXCEL VÀ 3BC");
@@ -26,7 +26,7 @@ public class MainApplication extends Application {
         stage.show();
         // lấy controller của FXMLLoader và gọi hàm getControls rồi thêm chính stage này vào list để hàm khởi tạo của
         // controller gọi hàm set language cho các control sẽ set ngôn ngữ cho chính title của stage này
-        ((ConVertExcelAnd3BCController) fxmlLoader.getController()).getControls().add(stage);
+        ((ConVertExcelToBkavExcelController) fxmlLoader.getController()).getControls().add(stage);
     }
 
     @Override

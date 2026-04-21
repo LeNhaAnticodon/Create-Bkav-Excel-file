@@ -18,7 +18,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="599.0" prefWidth="599.0" style="-fx-background-color: #F0F4C3;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lenha.createBKAVexcelFile.ConVertExcelAnd3BCController">
+<BorderPane fx:id="mainBoderPane" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="599.0" prefWidth="599.0" style="-fx-background-color: #F0F4C3;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lenha.createBKAVexcelFile.ConVertExcelToBkavExcelController">
    <top>
       <VBox alignment="TOP_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
          <children>
@@ -101,16 +101,19 @@
                      <children>
                         <HBox alignment="CENTER_LEFT" spacing="5.0" HBox.hgrow="SOMETIMES">
                            <children>
-                              <TextField fx:id="heSoTf" editable="false" prefHeight="28.0">
+                              <TextField fx:id="heSoTf" editable="false" opacity="0.8" prefHeight="28.0">
                                  <font>
                                     <Font name="System Bold Italic" size="12.0" />
                                  </font></TextField>
-                              <Button mnemonicParsing="false" onAction="#dieuChinhHeSo" prefHeight="28.0" text="Nhập hệ số" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#dieuChinhHeSo" prefHeight="28.0" text="Nhập hệ số" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font></Button>
                            </children>
                         </HBox>
                         <HBox alignment="CENTER_RIGHT" spacing="5.0">
                            <children>
-                              <Label style="-fx-background-color: yellow; -fx-label-padding: 1; -fx-background-radius: 3;" text="Nhập tên file Excel sẽ tạo" textFill="#06637c">
+                              <Label minWidth="-Infinity" style="-fx-background-color: yellow; -fx-label-padding: 1; -fx-background-radius: 3;" text="Nhập tên file Excel sẽ tạo" textFill="#06637c">
                                  <font>
                                     <Font name="System Bold" size="15.0" />
                                  </font>

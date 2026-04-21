@@ -1,14 +1,9 @@
 package com.lenha.createBKAVexcelFile.dao;
 
-import com.lenha.createBKAVexcelFile.convert.excelTo3bc.ReadExcel;
 import com.lenha.createBKAVexcelFile.model.ExcelFile;
 import com.lenha.createBKAVexcelFile.model.Setup;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -357,6 +352,19 @@ public class SetupData {
     }
 
     /**
+     * set hệ số
+     * @param heSo hệ số tính toán
+     */
+    public void setHeSo (double heSo) {
+        setup.setHeSo(heSo);
+        try {
+            saveSetup();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
      * set link của file tính vật liệu 3bc cho đối tượng cài đặt và lưu vào file
      * @param link3bcToriaiFile link thư mục chứa file 3bc
      */
@@ -440,6 +448,7 @@ public class SetupData {
 
                     String linkExcelFile = dis.readUTF();
                     String linkExcelFile2 = dis.readUTF();
+                    double heSo = dis.readDouble();
                     String linkSaveCvsFileDir = dis.readUTF();
                     String lang = dis.readUTF();
                     String linkSave3bcFileDir = dis.readUTF();
@@ -450,6 +459,9 @@ public class SetupData {
 
                     setup.setLinkExcelFile2(linkExcelFile2);
                     System.out.println(":" + setup.getLinkExcelFile2());
+
+                    setup.setHeSo(heSo);
+                    System.out.println(":" + setup.getHeSo());
 
                     setup.setLink3bcToriaiFile(linkSaveCvsFileDir);
                     System.out.println(":" + setup.getLink3bcToriaiFile());
@@ -496,6 +508,7 @@ public class SetupData {
         try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(pathFile)))) {
             dos.writeUTF(setup.getLinkExcelFile());
             dos.writeUTF(setup.getLinkExcelFile2());
+            dos.writeDouble(setup.getHeSo());
             dos.writeUTF(setup.getLink3bcToriaiFile());
             dos.writeUTF(setup.getLang());
             dos.writeUTF(setup.getLinkSave3BCFileDir());
