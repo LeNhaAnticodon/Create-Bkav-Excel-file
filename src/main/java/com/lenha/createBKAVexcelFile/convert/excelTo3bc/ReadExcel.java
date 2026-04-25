@@ -541,18 +541,18 @@ public class ReadExcel {
         Sheet sheet1 = workbook.getSheetAt(0);
 
         // lấy text của các ô tiêu đề cần check
-        String soTienThuHo = sheet1.getRow(0).getCell(2).getStringCellValue();
-        String trongLuong = sheet1.getRow(0).getCell(7).getStringCellValue();
-        String diaChiNguoiNhan = sheet1.getRow(0).getCell(19).getStringCellValue();
-        String loaiHangHoa = sheet1.getRow(0).getCell(20).getStringCellValue();
-        String tenNguoiNhan = sheet1.getRow(0).getCell(21).getStringCellValue();
+        String maVanDon = sheet1.getRow(0).getCell(2).getStringCellValue();
+        String soDienThoai = sheet1.getRow(0).getCell(5).getStringCellValue();
+        String nguoiNhan = sheet1.getRow(0).getCell(6).getStringCellValue();
+        String diaChi = sheet1.getRow(0).getCell(7).getStringCellValue();
+        String sanPham = sheet1.getRow(0).getCell(12).getStringCellValue();
 
         // kiểm tra các text đã lấy có khớp với text chuẩn không, nếu có trả về true
-        if (soTienThuHo.equals("Số tiền thu hộ") &&
-                        trongLuong.equals("Trọng lượng") &&
-                        diaChiNguoiNhan.equals("Người nhận Địa chỉ") &&
-                        loaiHangHoa.equals("Loại hàng hóa") &&
-                        tenNguoiNhan.equals("Tên người nhận")) {
+        if (maVanDon.equals("Mã vận đơn") &&
+                soDienThoai.equals("Số điện thoại") &&
+                nguoiNhan.equals("Người nhận") &&
+                diaChi.equals("Địa chỉ") &&
+                sanPham.equals("Sản phẩm")) {
             System.out.println("file hợp lệ");
             return true;
         }
@@ -580,12 +580,12 @@ public class ReadExcel {
 
         Sheet sheet1 = workbook.getSheetAt(0);
 
-        // lấy text của các ô tiêu đề cần check
-        String soTienThuHo = sheet1.getRow(0).getCell(2).getStringCellValue();
-        String trongLuong = sheet1.getRow(0).getCell(7).getStringCellValue();
-        String diaChiNguoiNhan = sheet1.getRow(0).getCell(19).getStringCellValue();
-        String loaiHangHoa = sheet1.getRow(0).getCell(20).getStringCellValue();
-        String tenNguoiNhan = sheet1.getRow(0).getCell(21).getStringCellValue();
+//        // lấy text của các ô tiêu đề cần check
+//        String soTienThuHo = sheet1.getRow(0).getCell(2).getStringCellValue();
+//        String trongLuong = sheet1.getRow(0).getCell(7).getStringCellValue();
+//        String diaChiNguoiNhan = sheet1.getRow(0).getCell(19).getStringCellValue();
+//        String loaiHangHoa = sheet1.getRow(0).getCell(20).getStringCellValue();
+//        String tenNguoiNhan = sheet1.getRow(0).getCell(21).getStringCellValue();
 
         // kiểm tra các text đã lấy có khớp với text chuẩn không, nếu có trả về true
         if (true) {

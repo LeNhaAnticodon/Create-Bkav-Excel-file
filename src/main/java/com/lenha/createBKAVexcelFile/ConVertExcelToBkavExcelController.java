@@ -1093,7 +1093,7 @@ public class ConVertExcelToBkavExcelController implements Initializable {
     }
 
     /**
-     * thực hiện chuyển dữ liệu từ file pdf sang file excel
+     * thực hiện chuyển dữ liệu từ file excel pancake sang file excel bkav
      */
     @FXML
     public void convertExcelToBkavExcel(ActionEvent actionEvent) {
