@@ -1,6 +1,7 @@
 package com.lenha.createBKAVexcelFile;
 
 import com.lenha.createBKAVexcelFile.convert.ExcelTo3BC;
+import com.lenha.createBKAVexcelFile.convert.ReadHoaDonExcelToBkavExcel;
 import com.lenha.createBKAVexcelFile.convert.ReadPDFToExcel;
 import com.lenha.createBKAVexcelFile.convert.excelTo3bc.ReadExcel;
 import com.lenha.createBKAVexcelFile.dao.SetupData;
@@ -1200,14 +1201,14 @@ public class ConVertExcelToBkavExcelController implements Initializable {
 
             // nếu không phải là thư mục thì yêu cầu chọn lại
             if (!isExcelBkavDir) {
-                /* nếu địa chỉ file pdf đã xác nhận thì nó sẽ tự động lấy địa chỉ thư mục chứa file pdf đó nhập vào
-                 linkCvsDir, mà trước đó đã xác nhận chưa chọn thư mục chứa file đã chuyển nên cần xóa text của
-                 linkCvsDir đi để người dùng xác nhận lại, tránh hiển thị địa chỉ mặc định trên ỏ linkCvsDir làm khó hiểu */
+                /* nếu địa chỉ file excel đã xác nhận thì nó sẽ tự động lấy địa chỉ thư mục chứa file excel đó nhập vào
+                 linkExcelBkavDir, mà trước đó đã xác nhận chưa chọn thư mục chứa file đã chuyển nên cần xóa text của
+                 linkExcelBkavDir đi để người dùng xác nhận lại, tránh hiển thị địa chỉ mặc định trên ô linkExcelBkavDir làm khó hiểu */
                 linkExcelBkavDir.setText("");
                 SetupData.getInstance().setLinkSaveExcelFileDir("");
                 // hiển thị alert yêu cầu chọn lại
-                confirmAlert.setTitle(CONFIRM_EXCEL_FILE_DIR_TITLE);
-                confirmAlert.setHeaderText(CONFIRM_EXCEL_FILE_DIR_HEADER);
+                confirmAlert.setTitle("Xác nhận thư mục chứa file EXCEL Bkav");
+                confirmAlert.setHeaderText("Địa chỉ thư mục chứa file EXCEL Bkav chưa được xác nhận");
                 confirmAlert.setContentText(CONFIRM_EXCEL_FILE_DIR_CONTENT);
                 updateLangAlert(confirmAlert);
                 Optional<ButtonType> result = confirmAlert.showAndWait();
@@ -1244,42 +1245,32 @@ public class ConVertExcelToBkavExcelController implements Initializable {
                 System.out.println(excelBkavDir.getAbsolutePath());
             }
 
-            // gọi hàm chuyển file từ class static convertPDFToExcel
+            // gọi hàm chuyển file từ class static ReadHoaDonExcelToBkavExcel
             try {
 
-//                ReadPDFToExcel.convertPDFToExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), SetupData.getInstance().getExcelFile(), exCellType);
-//
-//
-//                if (!ReadPDFToExcel.kirirosu20) {
-//                    ReadPDFToExcel.kirirosu20 = true;
-//                    confirmAlert.setAlertType(Alert.AlertType.WARNING);
-//                    // hiển thị alert có tồn tại kirirosu kha 2.0
-//                    confirmAlert.setTitle(CONFIRM_KIRIROSU_20);
-//                    confirmAlert.setHeaderText(CONFIRM_KIRIROSU_20_HEADER);
-//                    confirmAlert.setContentText("");
-//
-//                    updateLangAlert(confirmAlert);
-//                    confirmAlert.showAndWait();
-//                }
-//
-//                confirmAlert.setAlertType(Alert.AlertType.CONFIRMATION);
-//
-//                // hiển thị alert chuyển file thành công
-//                confirmAlert.setTitle(CONFIRM_CONVERT_COMPLETE_TITLE);
-//                confirmAlert.setHeaderText(CONFIRM_CONVERT_COMPLETE_HEADER);
-//                confirmAlert.setContentText(CONFIRM_CONVERT_COMPLETE_CONTENT);
-//
-//                updateLangAlert(confirmAlert);
-//
-//                Optional<ButtonType> result = confirmAlert.showAndWait();
-//
-//                // nếu là nút ok thì copy đường dẫn thư mục chứa file excel vào clipboard và mở thư mục này
-//                if (result.isPresent() && result.get() == ButtonType.OK) {
-//                    copyContentToClipBoard(excelBkavDir.getAbsolutePath());
-//                    // mở thư mục chứa file chl
-//                    Desktop.getDesktop().open(excelBkavDir);
-//                }
-//
+                ReadHoaDonExcelToBkavExcel.convertHoaDonExcelToBkavExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), bkavExcelNameTf.getText() , SetupData.getInstance().getSetup().getHeSo());
+
+
+
+
+                confirmAlert.setAlertType(Alert.AlertType.CONFIRMATION);
+
+                // hiển thị alert chuyển file thành công
+                confirmAlert.setTitle(CONFIRM_CONVERT_COMPLETE_TITLE);
+                confirmAlert.setHeaderText(CONFIRM_CONVERT_COMPLETE_HEADER);
+                confirmAlert.setContentText(CONFIRM_CONVERT_COMPLETE_CONTENT);
+
+                updateLangAlert(confirmAlert);
+
+                Optional<ButtonType> result = confirmAlert.showAndWait();
+
+                // nếu là nút ok thì copy đường dẫn thư mục chứa file excel vào clipboard và mở thư mục này
+                if (result.isPresent() && result.get() == ButtonType.OK) {
+                    copyContentToClipBoard(excelBkavDir.getAbsolutePath());
+                    // mở thư mục chứa file chl
+                    Desktop.getDesktop().open(excelBkavDir);
+                }
+
                 System.out.println("hoàn thành kiểm tra");
                 return;
             } catch (Exception e) {
