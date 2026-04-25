@@ -1160,14 +1160,17 @@ public class ConVertExcelToBkavExcelController implements Initializable {
             }
 
             // kiểm tra tính hợp lệ của file excel, nếu không hợp thì yêu cầu chọn lại hoặc thoát
-            if (checkExcelRootFile(excelHoaDonFile)) return;
+            // có thể không cần thiết
+            /*if (checkExcelRootFile(excelHoaDonFile)) {
+                return;
+            }*/
 
             // nếu không phải là file excel sản phẩm chuẩn thì yêu cầu chọn lại
             if (!isFileExcelSanPhamChuan) {
                 // hiển thị alert yêu cầu chọn lại file excel
-                confirmAlert.setTitle(CONFIRM_PDF_FILE_LINK_TITLE);
-                confirmAlert.setHeaderText(CONFIRM_PDF_FILE_LINK_HEADER);
-                confirmAlert.setContentText(CONFIRM_PDF_FILE_LINK_CONTENT);
+                confirmAlert.setTitle("Xác nhận địa chỉ file Excel sản phẩm chuẩn");
+                confirmAlert.setHeaderText("Địa chỉ của file Excel sản phẩm chuẩn chưa được xác nhận hoặc không đúng");
+                confirmAlert.setContentText("Hãy chọn file Excel để tiếp tục!");
                 updateLangAlert(confirmAlert);
                 Optional<ButtonType> result = confirmAlert.showAndWait();
 
@@ -1243,49 +1246,41 @@ public class ConVertExcelToBkavExcelController implements Initializable {
 
             // gọi hàm chuyển file từ class static convertPDFToExcel
             try {
-                String exCellType = excelOutput.getSelectedToggle().getUserData().toString();
 
-//                if (exCellType.equals("EX1")) {
-//                } else if (exCellType.equals("EX2")) {
-//                    System.out.println("tạo excel 2");
-//                } else if (exCellType.equals("EX3")) {
-//                    System.out.println("tạo excel 3");
-//                } else {
-//                    return;
+//                ReadPDFToExcel.convertPDFToExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), SetupData.getInstance().getExcelFile(), exCellType);
+//
+//
+//                if (!ReadPDFToExcel.kirirosu20) {
+//                    ReadPDFToExcel.kirirosu20 = true;
+//                    confirmAlert.setAlertType(Alert.AlertType.WARNING);
+//                    // hiển thị alert có tồn tại kirirosu kha 2.0
+//                    confirmAlert.setTitle(CONFIRM_KIRIROSU_20);
+//                    confirmAlert.setHeaderText(CONFIRM_KIRIROSU_20_HEADER);
+//                    confirmAlert.setContentText("");
+//
+//                    updateLangAlert(confirmAlert);
+//                    confirmAlert.showAndWait();
 //                }
-                ReadPDFToExcel.convertPDFToExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), SetupData.getInstance().getExcelFile(), exCellType);
-
-
-                if (!ReadPDFToExcel.kirirosu20) {
-                    ReadPDFToExcel.kirirosu20 = true;
-                    confirmAlert.setAlertType(Alert.AlertType.WARNING);
-                    // hiển thị alert có tồn tại kirirosu kha 2.0
-                    confirmAlert.setTitle(CONFIRM_KIRIROSU_20);
-                    confirmAlert.setHeaderText(CONFIRM_KIRIROSU_20_HEADER);
-                    confirmAlert.setContentText("");
-
-                    updateLangAlert(confirmAlert);
-                    confirmAlert.showAndWait();
-                }
-
-                confirmAlert.setAlertType(Alert.AlertType.CONFIRMATION);
-
-                // hiển thị alert chuyển file thành công
-                confirmAlert.setTitle(CONFIRM_CONVERT_COMPLETE_TITLE);
-                confirmAlert.setHeaderText(CONFIRM_CONVERT_COMPLETE_HEADER);
-                confirmAlert.setContentText(CONFIRM_CONVERT_COMPLETE_CONTENT);
-
-                updateLangAlert(confirmAlert);
-
-                Optional<ButtonType> result = confirmAlert.showAndWait();
-
-                // nếu là nút ok thì copy đường dẫn thư mục chứa file excel vào clipboard và mở thư mục này
-                if (result.isPresent() && result.get() == ButtonType.OK) {
-                    copyContentToClipBoard(excelBkavDir.getAbsolutePath());
-                    // mở thư mục chứa file chl
-                    Desktop.getDesktop().open(excelBkavDir);
-                }
-
+//
+//                confirmAlert.setAlertType(Alert.AlertType.CONFIRMATION);
+//
+//                // hiển thị alert chuyển file thành công
+//                confirmAlert.setTitle(CONFIRM_CONVERT_COMPLETE_TITLE);
+//                confirmAlert.setHeaderText(CONFIRM_CONVERT_COMPLETE_HEADER);
+//                confirmAlert.setContentText(CONFIRM_CONVERT_COMPLETE_CONTENT);
+//
+//                updateLangAlert(confirmAlert);
+//
+//                Optional<ButtonType> result = confirmAlert.showAndWait();
+//
+//                // nếu là nút ok thì copy đường dẫn thư mục chứa file excel vào clipboard và mở thư mục này
+//                if (result.isPresent() && result.get() == ButtonType.OK) {
+//                    copyContentToClipBoard(excelBkavDir.getAbsolutePath());
+//                    // mở thư mục chứa file chl
+//                    Desktop.getDesktop().open(excelBkavDir);
+//                }
+//
+                System.out.println("hoàn thành kiểm tra");
                 return;
             } catch (Exception e) {
                 System.out.println(e.getMessage());
