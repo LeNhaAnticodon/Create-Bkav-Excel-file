@@ -45,10 +45,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.FileAlreadyExistsException;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 
+import static com.lenha.createBKAVexcelFile.convert.ReadHoaDonExcelToBkavExcel.*;
 import static com.lenha.createBKAVexcelFile.convert.ReadPDFToExcel.copyFile;
 
 public class ConVertExcelToBkavExcelController implements Initializable {
@@ -1248,10 +1250,10 @@ public class ConVertExcelToBkavExcelController implements Initializable {
             // gọi hàm chuyển file từ class static ReadHoaDonExcelToBkavExcel
             try {
 
-                ReadHoaDonExcelToBkavExcel.convertHoaDonExcelToBkavExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), bkavExcelNameTf.getText() , SetupData.getInstance().getSetup().getHeSo());
-
-
-
+                String ketQua = ReadHoaDonExcelToBkavExcel.convertHoaDonExcelToBkavExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), bkavExcelNameTf.getText(), SetupData.getInstance().getSetup().getHeSo());
+                if(ketQua.equals(LOI_SAN_PHAM_CHUAN)){
+                    return;
+                }
 
                 confirmAlert.setAlertType(Alert.AlertType.CONFIRMATION);
 
@@ -1289,11 +1291,11 @@ public class ConVertExcelToBkavExcelController implements Initializable {
                 updateLangAlert(confirmAlert);
 
                 // nếu là sự kiện không ghi được file excel do file trùng tên với file sắp tạo đang được mở
-                // th in ra cảnh báo và thoát
-                if (e instanceof FileNotFoundException) {
+                // thì in ra cảnh báo và thoát
+                if (e instanceof FileAlreadyExistsException) {
                     confirmAlert.getButtonTypes().clear();
                     confirmAlert.getButtonTypes().add(ButtonType.OK);
-                    confirmAlert.setHeaderText("Tên file EXCEL đang tạo: (\"" + ReadPDFToExcel.fileExcelName + "-NC" + ".xlsx" + "\") trùng tên với 1 file EXCEL khác đang được mở nên không thể ghi đè");
+                    confirmAlert.setHeaderText("Tên file EXCEL đang tạo: (\"" + fileBkavName + ".xls" + "\") trùng tên với 1 file EXCEL khác đang được mở nên không thể ghi đè");
                     confirmAlert.setContentText("Hãy đóng file EXCEL đang mở để tiếp tục!");
                     System.out.println("File đang được mở bởi người dùng khác");
                     updateLangAlert(confirmAlert);
@@ -1369,7 +1371,7 @@ public class ConVertExcelToBkavExcelController implements Initializable {
                     // nếu chọn ok thì gọi lại hàm chọn file pdf để chọn file khác
                     // nếu chọn cancel thì thoát
                     if (result.isPresent() && result.get() == ButtonType.OK) {
-                        File fileSelected2 = get3bcToriaiFile();
+                        File fileSelected2 = getExcelFile();
 
                         // nếu không chọn file thì thoát
                         if (fileSelected2 == null) {
