@@ -2,6 +2,7 @@ package com.lenha.createBKAVexcelFile.convert;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 
 import java.io.*;
@@ -150,7 +151,24 @@ public class ReadHoaDonExcelToBkavExcel {
             // đến đây nếu không có lỗi nữa thì tạo workbook của file bkav đầu ra excelBkav
             Workbook excelBkav;
             try (InputStream excelBkavStream = new FileInputStream(excelCopyPath)) {
-                excelBkav = WorkbookFactory.create(excelBkavStream);
+                // vì file bkav là file excel cũ đuôi xls nên cần tạo bằng HSSFWorkbook
+                // nếu tạo bằng WorkbookFactory.create thì trong môi trường code vẫn chạy bình thường nhưng khi xuất ra file jar sẽ bị lỗi không thấy thư viện
+                // khi này để tránh lỗi thì dùng HSSFWorkbook hoặc thêm thư viện vào maven
+                /*
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.poi</groupId>
+                            <artifactId>poi</artifactId>
+                            <version>5.2.5</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.apache.poi</groupId>
+                            <artifactId>poi-ooxml</artifactId>
+                            <version>5.2.5</version>
+                        </dependency>
+                    </dependencies>
+                */
+                excelBkav = new HSSFWorkbook(excelBkavStream);
             }
 
             // gọi hàm bắt đầu chuyển đổi dữ liệu từ file hóa đơn sang file đầu ra bkav vừa tạo
