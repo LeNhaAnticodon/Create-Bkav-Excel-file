@@ -1251,7 +1251,7 @@ public class ConVertExcelToBkavExcelController implements Initializable {
             try {
 
                 String ketQua = ReadHoaDonExcelToBkavExcel.convertHoaDonExcelToBkavExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), bkavExcelNameTf.getText(), SetupData.getInstance().getSetup().getHeSo());
-                if(ketQua.equals(LOI_SAN_PHAM_CHUAN)){
+                if(ketQua.equals(LOI_SAN_PHAM_CHUAN) || ketQua.equals(LOI_DU_LIEU)){
                     return;
                 }
 

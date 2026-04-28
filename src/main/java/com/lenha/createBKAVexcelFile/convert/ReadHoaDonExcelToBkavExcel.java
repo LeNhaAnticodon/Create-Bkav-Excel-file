@@ -5,9 +5,11 @@ import javafx.scene.control.ButtonType;
 import org.apache.poi.ss.usermodel.*;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import java.util.LinkedList;
 
 public class ReadHoaDonExcelToBkavExcel {
     public static final String LOI_SAN_PHAM_CHUAN = "LOI_SAN_PHAM_CHUAN";
+    public static final String LOI_DU_LIEU = "LOI_DU_LIEU";
     public static final String THANH_CONG = "THANH_CONG";
     private static Workbook excelHoaDon;
     private static final Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -24,11 +27,12 @@ public class ReadHoaDonExcelToBkavExcel {
 
     /**
      * chuyển đổi file excel hóa đơn pancake sang hóa đơn bkav
-     * @param excelHoaDonFile file hóa đơn
+     *
+     * @param excelHoaDonFile       file hóa đơn
      * @param excelSanPhamChuanFile file sản phẩm chuẩn
-     * @param excelBkavDir địa chỉ thư mục chứa file bkav đầu ra
-     * @param bkavExcelName tên file bkav sẽ tạo
-     * @param heSo hệ số dùng để nhập vào file bkav
+     * @param excelBkavDir          địa chỉ thư mục chứa file bkav đầu ra
+     * @param bkavExcelName         tên file bkav sẽ tạo
+     * @param heSo                  hệ số dùng để nhập vào file bkav
      * @return kết quả chuyển file
      * @throws IOException đọc ghi file
      */
@@ -111,7 +115,7 @@ public class ReadHoaDonExcelToBkavExcel {
 
             // Đọc file mẫu excel bkav đầu ra từ resources rồi copy file ra địa chỉ của copyFilePath
             // nếu tên sản phẩm không điền thì cho nó tên mặc định bkav + ngày giờ
-            if (fileBkavName.isBlank()){
+            if (fileBkavName.isBlank()) {
                 DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                 fileBkavName = "BKAV_" + LocalDateTime.now().format(fmt);
                 System.out.println(fileBkavName);
@@ -150,30 +154,32 @@ public class ReadHoaDonExcelToBkavExcel {
             }
 
             // gọi hàm bắt đầu chuyển đổi dữ liệu từ file hóa đơn sang file đầu ra bkav vừa tạo
-            ChuyenFileHoaDonSangFileBkav(excelHoaDon, excelBkav, heSo);
+            String ketQua = ChuyenFileHoaDonSangFileBkav(excelHoaDon, excelBkav, heSo);
 
             try (FileOutputStream fileOut = new FileOutputStream(excelCopyPath)) {
                 excelBkav.write(fileOut);
 
                 excelBkav.close();
             }
+
+            return ketQua;
         }
 
-        return THANH_CONG;
 
     }
 
     /**
      * chuyển đổi dữ liệu từ file hóa đơn sang file đầu ra bkav
+     *
      * @param excelHoaDon excel hóa đơn
-     * @param excelBkav excel bkav
-     * @param heSo hệ số cần ghi vào cột trong excel bkav
+     * @param excelBkav   excel bkav
+     * @param heSo        hệ số cần ghi vào cột trong excel bkav
      */
-    private static void ChuyenFileHoaDonSangFileBkav(Workbook excelHoaDon, Workbook excelBkav, double heSo) {
+    private static String ChuyenFileHoaDonSangFileBkav(Workbook excelHoaDon, Workbook excelBkav, double heSo) {
 
         LinkedList<String[]> danhSachSP = new LinkedList<>();
 
-        int[] cacCotThongTin = {2, 5, 6, 7, 12, 15, 17};
+        int[] cacCotThongTin = {2, 6, 7, 12, 15, 17};
         int soCotThongTin = cacCotThongTin.length;
 
         // gọi hàm lấy danh sách các sản phẩm trong file hóa đơn ban đầu cho vào list danhSachSP
@@ -185,6 +191,10 @@ public class ReadHoaDonExcelToBkavExcel {
         System.out.println(soSP);
         for (int i = 0; i < soSP - 3; i++) {
             int rowWritingIndex = 6 + i;
+
+            // chèm thêm một hàng xuống bên dưới
+            insertRowBelow(sheet0Bkav, 6 + i);
+
             Row rowWriting = sheet0Bkav.getRow(rowWritingIndex);
 
             Row underRowWriting = sheet0Bkav.getRow(rowWritingIndex + 1);
@@ -199,11 +209,93 @@ public class ReadHoaDonExcelToBkavExcel {
                 copyRowCellWithFormulaUpdate(rowWriting.getCell(k), underRowWriting.getCell(k), 1);
             }
         }
-        
 
+        // thứ tự cột cần nhập dữ liệu 1-12-16-2-4-5, cột sdt của hóa đơn ban đầu không có nên
+        for (int i = 0; i < soSP; i++) {
+            Row rowSpI = sheet0Bkav.getRow(5 + i);
+            String[] sanPham = danhSachSP.get(i);
+
+            Cell oMaVanDon = rowSpI.getCell(1);
+            Cell oHoTenNguoiMua = rowSpI.getCell(12);
+            Cell oDiaChi = rowSpI.getCell(16);
+            Cell oTenSanPham = rowSpI.getCell(2);
+            Cell oSoLuong = rowSpI.getCell(4);
+            Cell oDonGia = rowSpI.getCell(5);
+
+            try {
+                BigInteger maVanDonBig = new BigInteger(sanPham[0]);
+                String maVanDon = sanPham[0];
+
+                String tenNguoiMua = sanPham[1];
+                String diaChi = sanPham[2];
+                String tenSanPham = sanPham[3];
+                double soLuong = Double.parseDouble(sanPham[4]);
+                double donGia = Double.parseDouble(sanPham[5]) / 1.08;
+                donGia = Math.round(donGia * 100.0) / 100.0;
+
+                if (donGia == 0) {
+                    tenSanPham = "Hàng tặng không thu tiền: " + tenSanPham;
+                }
+
+                oMaVanDon.setCellValue(maVanDon);
+                oHoTenNguoiMua.setCellValue(tenNguoiMua);
+                oDiaChi.setCellValue(diaChi);
+                oTenSanPham.setCellValue(tenSanPham);
+                oSoLuong.setCellValue(soLuong);
+                oDonGia.setCellValue(donGia);
+
+                // tự xử lý các ô tự tính
+                // chỉ số các cột tự tính
+                // stt = 0,
+                // DonViTinh/ChietKhau = 3
+                // ThanhTien = 6,
+                // ThueSuat = 7,
+                // TienThueGTGT= 8,
+                // NgayThangNamHD = 9,
+                // HinhThucTT = 18
+                Cell oSTT = rowSpI.getCell(0);
+                Cell oDonViTinh = rowSpI.getCell(3);
+                Cell oThanhTien = rowSpI.getCell(6);
+                Cell oThueSuat = rowSpI.getCell(7);
+                Cell oGTGT = rowSpI.getCell(8);
+                Cell oDate = rowSpI.getCell(9);
+                Cell oCachTT = rowSpI.getCell(18);
+
+                double thanhTien = donGia * soLuong;
+                DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                String now = LocalDate.now().format(fmt);
+
+                oSTT.setCellValue(i + 1);
+                oDonViTinh.setCellValue("Kg");
+                oThanhTien.setCellValue(Math.round(thanhTien));
+                oThueSuat.setCellValue(heSo);
+                oGTGT.setCellValue(Math.round(thanhTien * heSo));
+                oDate.setCellValue(now);
+                oCachTT.setCellValue("TM/CK");
+            } catch (Exception e) {
+                System.out.println("Lỗi chuyển dữ liệu thông tin sản phẩm");
+                e.printStackTrace();
+                // xóa hết các button, đổi alert sang dạng error rồi thêm lại 2 nút ok và cancel
+                confirmAlert.getButtonTypes().clear();
+                confirmAlert.setAlertType(Alert.AlertType.ERROR);
+                confirmAlert.getButtonTypes().add(ButtonType.OK);
+
+                confirmAlert.setTitle("Thông báo lỗi chuyển filr");
+                confirmAlert.setHeaderText("Có sản phẩm có thông tin không đúng theo chuẩn số và chữ");
+                confirmAlert.setContentText("Hãy sửa lại thông tin sản phẩm trong file đầu vào");
+                confirmAlert.show();
+                return LOI_DU_LIEU;
+            }
+
+
+
+
+        }
+
+        return THANH_CONG;
     }
 
-    private static void getDanhSachSanSP(LinkedList<String[]> danhSachSP, int[] cacCotThongTin, int soCotThongTin, Workbook excelHoaDon){
+    private static void getDanhSachSanSP(LinkedList<String[]> danhSachSP, int[] cacCotThongTin, int soCotThongTin, Workbook excelHoaDon) {
         // lấy sheet 0 của excel hóa đơn
         Sheet sheet0HD = excelHoaDon.getSheetAt(0);
         // lấy hàng cuối chứa dữ liệu
@@ -211,6 +303,12 @@ public class ReadHoaDonExcelToBkavExcel {
 
         for (int i = 1; i <= latRowHD; i++) {
             Row rowI = sheet0HD.getRow(i);
+
+            Cell oCot0 = rowI.getCell(0);
+            if (oCot0 == null || oCot0.toString().isBlank()) {
+                continue;
+            }
+
             String[] sanPham = new String[soCotThongTin];
 
             if (rowI != null) {
@@ -225,13 +323,13 @@ public class ReadHoaDonExcelToBkavExcel {
 
                     // nếu ô có giá trị rỗng thì xem ô mã vận đơn của hàng trên có giống hàng này không
                     // nếu có thì copy giá trị của ô hàng trên cho ô này
-                    if (duLieu.isBlank()){
+                    if (duLieu.isBlank()) {
                         Row hangTren = sheet0HD.getRow(i - 1);
-                        if (hangTren != null){
+                        if (hangTren != null) {
                             Cell oCot2 = rowI.getCell(2);
                             Cell oCot2HangTren = hangTren.getCell(2);
-                            if (oCot2 != null && oCot2HangTren != null){
-                                if (oCot2.toString().equals(oCot2HangTren.toString())){
+                            if (oCot2 != null && oCot2HangTren != null) {
+                                if (oCot2.toString().equals(oCot2HangTren.toString())) {
                                     Cell oHangTren = hangTren.getCell(chiSoCotThongTin);
                                     duLieu = oHangTren.toString();
                                 }
@@ -252,6 +350,7 @@ public class ReadHoaDonExcelToBkavExcel {
 
     /**
      * check xem các tên trong hóa đơn ban đầu có khớp với các tên sản phẩm chuẩn không
+     *
      * @param danhSachSPC danh sách các sản phẩm chuẩn
      * @return danh sách chỉ số các hàng chứa tên sai chuẩn
      */
@@ -285,7 +384,7 @@ public class ReadHoaDonExcelToBkavExcel {
                     }
                     // nếu kết thúc vòng lặp biến nhớ vần false thì tức là tên sản phẩm không khớp tên chuẩn
                     // thì thêm chỉ số hàng của sản phẩm này vào list các hàng tên lỗi
-                    if (!tenTonTai){
+                    if (!tenTonTai) {
                         cacHangTenLoi.add(i + 1);
                     }
                 }
@@ -382,5 +481,30 @@ public class ReadHoaDonExcelToBkavExcel {
             }
         }
         return updatedFormula.toString();
+    }
+
+    public static void insertRowBelow(Sheet sheet, int rowIndex) {
+        int lastRowNum = sheet.getLastRowNum();
+
+        // Dịch tất cả các hàng từ rowIndex + 1 trở xuống xuống 1 dòng
+        if (rowIndex + 1 <= lastRowNum) {
+            sheet.shiftRows(rowIndex + 1, lastRowNum, 1, true, false);
+        }
+
+        // Tạo hàng mới ngay dưới rowIndex
+        Row newRow = sheet.createRow(rowIndex + 1);
+
+        // Nếu muốn giữ style của hàng trên
+        Row sourceRow = sheet.getRow(rowIndex);
+        if (sourceRow != null) {
+            newRow.setHeight(sourceRow.getHeight());
+            for (int i = sourceRow.getFirstCellNum(); i < sourceRow.getLastCellNum(); i++) {
+                Cell oldCell = sourceRow.getCell(i);
+                if (oldCell != null) {
+                    Cell newCell = newRow.createCell(i);
+                    newCell.setCellStyle(oldCell.getCellStyle());
+                }
+            }
+        }
     }
 }
