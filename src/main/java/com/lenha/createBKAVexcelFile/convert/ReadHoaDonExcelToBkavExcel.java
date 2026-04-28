@@ -151,6 +151,12 @@ public class ReadHoaDonExcelToBkavExcel {
 
             // gọi hàm bắt đầu chuyển đổi dữ liệu từ file hóa đơn sang file đầu ra bkav vừa tạo
             ChuyenFileHoaDonSangFileBkav(excelHoaDon, excelBkav, heSo);
+
+            try (FileOutputStream fileOut = new FileOutputStream(excelCopyPath)) {
+                excelBkav.write(fileOut);
+
+                excelBkav.close();
+            }
         }
 
         return THANH_CONG;
@@ -165,7 +171,83 @@ public class ReadHoaDonExcelToBkavExcel {
      */
     private static void ChuyenFileHoaDonSangFileBkav(Workbook excelHoaDon, Workbook excelBkav, double heSo) {
 
+        LinkedList<String[]> danhSachSP = new LinkedList<>();
 
+        int[] cacCotThongTin = {2, 5, 6, 7, 12, 15, 17};
+        int soCotThongTin = cacCotThongTin.length;
+
+        // gọi hàm lấy danh sách các sản phẩm trong file hóa đơn ban đầu cho vào list danhSachSP
+        getDanhSachSanSP(danhSachSP, cacCotThongTin, soCotThongTin, excelHoaDon);
+
+        Sheet sheet0Bkav = excelBkav.getSheetAt(0);
+        int soSP = danhSachSP.size();
+
+        System.out.println(soSP);
+        for (int i = 0; i < soSP - 3; i++) {
+            int rowWritingIndex = 6 + i;
+            Row rowWriting = sheet0Bkav.getRow(rowWritingIndex);
+
+            Row underRowWriting = sheet0Bkav.getRow(rowWritingIndex + 1);
+            int rowWritingHeight = rowWriting.getHeight();
+            if (underRowWriting == null) {
+                underRowWriting = sheet0Bkav.createRow(rowWritingIndex + 1);
+            }
+
+            // copy cả chiều cao dòng của dòng bên trên
+            underRowWriting.setHeight((short) rowWritingHeight);
+            for (int k = 0; k < 30; k++) {
+                copyRowCellWithFormulaUpdate(rowWriting.getCell(k), underRowWriting.getCell(k), 1);
+            }
+        }
+        
+
+    }
+
+    private static void getDanhSachSanSP(LinkedList<String[]> danhSachSP, int[] cacCotThongTin, int soCotThongTin, Workbook excelHoaDon){
+        // lấy sheet 0 của excel hóa đơn
+        Sheet sheet0HD = excelHoaDon.getSheetAt(0);
+        // lấy hàng cuối chứa dữ liệu
+        int latRowHD = sheet0HD.getLastRowNum();
+
+        for (int i = 1; i <= latRowHD; i++) {
+            Row rowI = sheet0HD.getRow(i);
+            String[] sanPham = new String[soCotThongTin];
+
+            if (rowI != null) {
+                for (int j = 0; j < soCotThongTin; j++) {
+                    int chiSoCotThongTin = cacCotThongTin[j];
+                    Cell cotThongTinJ = rowI.getCell(chiSoCotThongTin);
+                    if (cotThongTinJ == null) {
+                        cotThongTinJ = rowI.createCell(chiSoCotThongTin);
+                    }
+
+                    String duLieu = cotThongTinJ.toString();
+
+                    // nếu ô có giá trị rỗng thì xem ô mã vận đơn của hàng trên có giống hàng này không
+                    // nếu có thì copy giá trị của ô hàng trên cho ô này
+                    if (duLieu.isBlank()){
+                        Row hangTren = sheet0HD.getRow(i - 1);
+                        if (hangTren != null){
+                            Cell oCot2 = rowI.getCell(2);
+                            Cell oCot2HangTren = hangTren.getCell(2);
+                            if (oCot2 != null && oCot2HangTren != null){
+                                if (oCot2.toString().equals(oCot2HangTren.toString())){
+                                    Cell oHangTren = hangTren.getCell(chiSoCotThongTin);
+                                    duLieu = oHangTren.toString();
+                                }
+                            }
+                        }
+                    }
+                    sanPham[j] = duLieu;
+                }
+            }
+
+            danhSachSP.add(sanPham);
+        }
+
+        danhSachSP.forEach(sanpham -> {
+            System.out.println(Arrays.toString(sanpham));
+        });
     }
 
     /**
@@ -212,5 +294,93 @@ public class ReadHoaDonExcelToBkavExcel {
         }
         // trả về danh sách chỉ số các hàng chứa tên sai chuẩn
         return cacHangTenLoi;
+    }
+
+    /**
+     * copy công thức từ srcCell vào destCell và thay đổi công thức theo hàng
+     * của destCell cho phù hợp dựa vào khoảng cách hàng giữa 2 cell bằng tham số shiftRows
+     *
+     * @param srcCell   cell gốc
+     * @param destCell  cell copy từ cell gốc
+     * @param shiftRows khảng cách hàng giữa cell gốc và cell copy
+     */
+    private static void copyRowCellWithFormulaUpdate(Cell srcCell, Cell destCell, int shiftRows) {
+        if (destCell == null) {
+            destCell = srcCell.getSheet().getRow(srcCell.getRowIndex() + shiftRows).createCell(srcCell.getColumnIndex());
+        }
+        destCell.setCellStyle(srcCell.getCellStyle());
+        switch (srcCell.getCellType()) {
+            case STRING:
+                destCell.setCellValue(srcCell.getStringCellValue());
+                break;
+            case NUMERIC:
+                destCell.setCellValue(srcCell.getNumericCellValue());
+                break;
+            case BOOLEAN:
+                destCell.setCellValue(srcCell.getBooleanCellValue());
+                break;
+            case FORMULA:
+                String formula = srcCell.getCellFormula();
+                StringBuilder updatedFormula = new StringBuilder(updateRowFormula(formula, shiftRows));
+                updatedFormula = new StringBuilder(updatedFormula.toString().replaceAll("SUN", "SUM"));
+
+
+                destCell.setCellFormula(updatedFormula.toString());
+                break;
+            case BLANK:
+                destCell.setBlank();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private static String updateRowFormula(String formula, int shiftRows) {
+        StringBuilder updatedFormula = new StringBuilder();
+        int length = formula.length();
+        boolean isAbsoluteColumn = false;
+        boolean isAbsoluteRow = false;
+
+        for (int i = 0; i < length; i++) {
+            char c = formula.charAt(i);
+            if (c == '$') {
+                if (i + 1 < length && Character.isLetter(formula.charAt(i + 1))) {
+                    isAbsoluteColumn = true;
+                    updatedFormula.append(c);
+                } else if (i + 1 < length && Character.isDigit(formula.charAt(i + 1))) {
+                    isAbsoluteRow = true;
+                    updatedFormula.append(c);
+                }
+            } else if (Character.isLetter(c)) {
+                StringBuilder column = new StringBuilder();
+                while (i < length && Character.isLetter(formula.charAt(i))) {
+                    column.append(formula.charAt(i));
+                    i++;
+                }
+                if (isAbsoluteColumn) {
+                    updatedFormula.append(column.toString());
+                } else {
+                    updatedFormula.append(column.toString());
+                }
+                isAbsoluteColumn = false;
+                i--; // Adjust for the increment in the loop
+            } else if (Character.isDigit(c)) {
+                StringBuilder row = new StringBuilder();
+                while (i < length && Character.isDigit(formula.charAt(i))) {
+                    row.append(formula.charAt(i));
+                    i++;
+                }
+                int rowIndex = Integer.parseInt(row.toString());
+                if (!isAbsoluteRow) {
+                    rowIndex += shiftRows;
+                }
+                updatedFormula.append(rowIndex);
+                isAbsoluteRow = false;
+                i--; // Adjust for the increment in the loop
+            } else {
+                updatedFormula.append(c);
+            }
+        }
+        return updatedFormula.toString();
     }
 }
