@@ -21,7 +21,7 @@ public class MainApplication extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("convertExcelToBkavExcel.fxml"));
 
         Scene scene = new Scene(fxmlLoader.load());
-        stage.setTitle("CHUYỂN ĐỔI QUA LẠI GIỮA CÁC FILE EXCEL VÀ 3BC");
+        stage.setTitle("CHUYỂN ĐỔI TỪ FILE EXCEL HÓA ĐƠN SANG FILE EXCEL BKAV");
         stage.setScene(scene);
         stage.show();
         // lấy controller của FXMLLoader và gọi hàm getControls rồi thêm chính stage này vào list để hàm khởi tạo của
