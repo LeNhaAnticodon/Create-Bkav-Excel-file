@@ -14,7 +14,7 @@ public class MainApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         // Tạo đối tượng Image từ file ảnh (đảm bảo file ảnh nằm trong thư mục resources)
-        Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/lenha/createBKAVexcelFile/ICON/LOGO_excel-3bc.png")));
+        Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/lenha/createBKAVexcelFile/ICON/LOGO_excel_Bkav.png")));
         // Thiết lập biểu tượng cho Stage
         stage.getIcons().add(icon);
 
