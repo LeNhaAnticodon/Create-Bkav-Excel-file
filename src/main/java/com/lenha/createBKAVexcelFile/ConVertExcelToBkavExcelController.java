@@ -1250,7 +1250,7 @@ public class ConVertExcelToBkavExcelController implements Initializable {
             // gọi hàm chuyển file từ class static ReadHoaDonExcelToBkavExcel
             try {
 
-                String ketQua = ReadHoaDonExcelToBkavExcel.convertHoaDonExcelToBkavExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), bkavExcelNameTf.getText(), SetupData.getInstance().getSetup().getHeSo());
+                String ketQua = ReadHoaDonExcelToBkavExcel.convertHoaDonExcelToBkavExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), bkavExcelNameTf.getText(), SetupData.getInstance().getSetup().getHeSo(), SetupData.getInstance().getExcelFile());
                 if(ketQua.equals(LOI_SAN_PHAM_CHUAN) || ketQua.equals(LOI_DU_LIEU)){
                     return;
                 }
@@ -1698,7 +1698,7 @@ public class ConVertExcelToBkavExcelController implements Initializable {
 
                         if (csvFile != null && !empty) {
                             // vùng chứa tên file
-                            Label labelName = new Label(csvFile.getName());
+                            Label   labelName = new Label(csvFile.getName());
                             // cài label có chiều ngang tối đa max
                             labelName.setMaxWidth(Double.MAX_VALUE);
                             // chọn chiều ngang tối thiểu là 188, do cài HBox.setHgrow(labelName, Priority.SOMETIMES);
@@ -1796,10 +1796,11 @@ public class ConVertExcelToBkavExcelController implements Initializable {
 
                                 // thêm các control vào hbox theo thứ tự xác định
                                 hBox.getChildren().add(labelName);
-                                hBox.getChildren().add(imageView);
+                                // vùng này đối với app này không cần
+/*                                hBox.getChildren().add(imageView);
                                 hBox.getChildren().add(labelSeihinChou);
                                 hBox.getChildren().add(separation);
-                                hBox.getChildren().add(labelKouzaiChou);
+                                hBox.getChildren().add(labelKouzaiChou);*/
 //                                hBox.setSpacing(10);
 
                                 // gán hbox cho dòng của list view

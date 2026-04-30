@@ -1,5 +1,7 @@
 package com.lenha.createBKAVexcelFile.convert;
 
+import com.lenha.createBKAVexcelFile.model.ExcelFile;
+import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -37,7 +39,9 @@ public class ReadHoaDonExcelToBkavExcel {
      * @return kết quả chuyển file
      * @throws IOException đọc ghi file
      */
-    public static String convertHoaDonExcelToBkavExcel(String excelHoaDonFile, String excelSanPhamChuanFile, String excelBkavDir, String bkavExcelName, double heSo) throws IOException {
+    public static String convertHoaDonExcelToBkavExcel(String excelHoaDonFile, String excelSanPhamChuanFile, String excelBkavDir, String bkavExcelName, double heSo, ObservableList<ExcelFile> excelFileNames) throws IOException {
+        // xóa danh sách cũ trước khi thực hiện, tránh bị ghi chồng lên nhau
+        excelFileNames.clear();
         // gán tên file bkav cho trường tên của class này
         fileBkavName = bkavExcelName;
         try (InputStream excelHoaDonStream = new FileInputStream(excelHoaDonFile)) {
@@ -180,6 +184,8 @@ public class ReadHoaDonExcelToBkavExcel {
                 excelBkav.close();
             }
 
+            // thêm tên file vào list các sheet của file để hiển thị tên file
+            excelFileNames.add(new ExcelFile(fileBkavName + ".xls", "", 0, 0));
             return ketQua;
         }
 
@@ -306,9 +312,8 @@ public class ReadHoaDonExcelToBkavExcel {
             }
 
 
-
-
         }
+
 
         return THANH_CONG;
     }
@@ -322,14 +327,15 @@ public class ReadHoaDonExcelToBkavExcel {
         for (int i = 1; i <= latRowHD; i++) {
             Row rowI = sheet0HD.getRow(i);
 
-            Cell oCot0 = rowI.getCell(0);
-            if (oCot0 == null || oCot0.toString().isBlank()) {
-                continue;
-            }
 
             String[] sanPham = new String[soCotThongTin];
 
             if (rowI != null) {
+                Cell oCotTenSanPham = rowI.getCell(12);
+                if (oCotTenSanPham == null || oCotTenSanPham.toString().isBlank()) {
+                    continue;
+                }
+
                 for (int j = 0; j < soCotThongTin; j++) {
                     int chiSoCotThongTin = cacCotThongTin[j];
                     Cell cotThongTinJ = rowI.getCell(chiSoCotThongTin);
@@ -339,19 +345,12 @@ public class ReadHoaDonExcelToBkavExcel {
 
                     String duLieu = cotThongTinJ.toString();
 
-                    // nếu ô có giá trị rỗng thì xem ô mã vận đơn của hàng trên có giống hàng này không
-                    // nếu có thì copy giá trị của ô hàng trên cho ô này
+                    // nếu ô có giá trị rỗng thì copy giá trị của ô hàng trên cho ô này
                     if (duLieu.isBlank()) {
                         Row hangTren = sheet0HD.getRow(i - 1);
                         if (hangTren != null) {
-                            Cell oCot2 = rowI.getCell(2);
-                            Cell oCot2HangTren = hangTren.getCell(2);
-                            if (oCot2 != null && oCot2HangTren != null) {
-                                if (oCot2.toString().equals(oCot2HangTren.toString())) {
-                                    Cell oHangTren = hangTren.getCell(chiSoCotThongTin);
-                                    duLieu = oHangTren.toString();
-                                }
-                            }
+                            Cell oHangTren = hangTren.getCell(chiSoCotThongTin);
+                            duLieu = oHangTren.toString();
                         }
                     }
                     sanPham[j] = duLieu;
@@ -361,9 +360,9 @@ public class ReadHoaDonExcelToBkavExcel {
             danhSachSP.add(sanPham);
         }
 
-        danhSachSP.forEach(sanpham -> {
-            System.out.println(Arrays.toString(sanpham));
-        });
+//        danhSachSP.forEach(sanpham -> {
+//            System.out.println(Arrays.toString(sanpham));
+//        });
     }
 
     /**
