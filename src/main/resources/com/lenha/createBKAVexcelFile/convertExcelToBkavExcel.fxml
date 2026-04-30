@@ -18,7 +18,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="mainBoderPane" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="599.0" prefWidth="599.0" style="-fx-background-color: #F0F4C3;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lenha.createBKAVexcelFile.ConVertExcelToBkavExcelController">
+<BorderPane fx:id="mainBoderPane" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="599.0" prefWidth="599.0" style="-fx-background-color: #F0F4C3;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lenha.createBKAVexcelFile.ConVertExcelToBkavExcelController">
    <top>
       <VBox alignment="TOP_RIGHT" spacing="5.0" BorderPane.alignment="CENTER">
          <children>
@@ -37,18 +37,15 @@
                       </Menu>
                       <Menu fx:id="menuEdit" mnemonicParsing="false" text="Edit">
                         <items>
-                          <MenuItem mnemonicParsing="false" onAction="#getExcelFile" text="Chọn file EXCEL cần chuyển" />
-                              <MenuItem mnemonicParsing="false" onAction="#setSave3bcFileDir" text="Chọn thư mục chứa file 3BC" />
-                              <MenuItem mnemonicParsing="false" onAction="#get3bcToriaiFile" text="Chọn file tính vật liệu của 3BC" />
-                              <MenuItem mnemonicParsing="false" onAction="#setSaveExcelFileDir" text="Chọn thư mục chứa file EXCEL sẽ tạo" />
+                          <MenuItem mnemonicParsing="false" onAction="#dieuChinhHeSo" text="Nhập thuế suất" />
                         </items>
                       </Menu>
                       <Menu fx:id="menuFile" mnemonicParsing="false" text="File">
                         <items>
-                              <MenuItem mnemonicParsing="false" onAction="#convertExcelTo3bcFile" text="CHUYEN FILE EXCEL SANG 3BC" />
-                              <MenuItem mnemonicParsing="false" onAction="#open3bcFileDir" text="Mở thư mục chứa file 3BC" />
-                          <MenuItem mnemonicParsing="false" onAction="#convertFilePdfToriaiToExcel" text="THỰC HIỆN CHUYỂN FILE" />
-                              <MenuItem mnemonicParsing="false" onAction="#openExcelDir" text="Mở thư mục chứa file EXCEL" />
+                              <MenuItem mnemonicParsing="false" onAction="#getExcelFile" text="Chọn file EXCEL cần chuyển" />
+                              <MenuItem mnemonicParsing="false" onAction="#setSaveExcelFileDir" text="Chọn thư mục chứa file EXCEL sẽ tạo" />
+                          <MenuItem mnemonicParsing="false" onAction="#getExcelFile2" text="Chọn file EXCEL sản phẩm chuẩn" />
+                              <MenuItem mnemonicParsing="false" onAction="#convertExcelToBkavExcel" text="THỰC HIỆN CHUYỂN FILE" />
                               <MenuItem mnemonicParsing="false" onAction="#closeApp" text="Đóng" />
                         </items>
                       </Menu>
@@ -105,7 +102,7 @@
                                  <font>
                                     <Font name="System Bold Italic" size="12.0" />
                                  </font></TextField>
-                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#dieuChinhHeSo" prefHeight="28.0" text="Nhập hệ số" HBox.hgrow="NEVER">
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#dieuChinhHeSo" prefHeight="28.0" text="Nhập thuế suất" HBox.hgrow="NEVER">
                                  <font>
                                     <Font name="System Bold" size="12.0" />
                                  </font></Button>

@@ -33,7 +33,7 @@
             <Font name="System Bold" size="14.0" />
          </font>
       </Label>
-      <Label fx:id="introduceContent" layoutX="10.0" layoutY="110.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="500.0" style="-fx-background-color: #CDDC39;" text="Phần mềm chuyển file PDF có nội dung tính vật liệu của thép hình sang các file CHL. Từ những thông tin lấy được trong file PDF các File CHL sẽ tạo định dạng phù hợp cho phần mềm CHL. Phần mềm CHL sẽ nhập file CHL vào để sử dụng." wrapText="true" VBox.vgrow="SOMETIMES">
+      <Label fx:id="introduceContent" layoutX="10.0" layoutY="110.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="500.0" style="-fx-background-color: #CDDC39;" text="Phần mềm chuyển file excel mua bán của pancake sang excel đầu vào của phần mềm kế toán BKAV" wrapText="true" VBox.vgrow="SOMETIMES">
          <padding>
             <Insets left="15.0" right="15.0" />
          </padding>
@@ -46,7 +46,7 @@
             <Font name="System Bold" size="14.0" />
          </font>
       </Label>
-      <Label fx:id="usingContent" layoutX="10.0" layoutY="296.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="500.0" style="-fx-background-color: #CDDC39;" text="chọn địa chỉ file PDF có nội dung tính vật liệu trên máy và chọn địa chỉ thư mục sẽ chứa các file CHL khi chuyển xong. Các link này sau khi được chọn sẽ hiển thị ở các ô bên trái. Sau đó ấn vào nút chuyển để thực hiện. Các file CHL tạo ra sẽ hiển thị trong danh sách bên trái. Có thể nhấn nút Copy link thư mục sẽ chứa các file CHL hoặc ấn nút mở thư mục chứa các file CHL để mở cửa sổ thư mục này." wrapText="true" VBox.vgrow="SOMETIMES">
+      <Label fx:id="usingContent" layoutX="10.0" layoutY="296.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="500.0" style="-fx-background-color: #CDDC39;" text="chọn địa chỉ file file excel đầu vào, chọn địa chỉ lưu file excel bkav sẽ tạo, chọn tên file sẽ tạo, chọn thuế suất, tên, chọn file chứa các tên sản phẩm chuẩn rồi nhấn nút thực hiện chuyển file. File excel tạo ra sẽ hiển thị trong cột bên trái. Có thể nhấn nút Copy link thư mục chứa các file excel được tạo hoặc ấn nút mở thư mục chứa file excel để mở cửa sổ thư mục này." wrapText="true" VBox.vgrow="SOMETIMES">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" />
          </padding>
