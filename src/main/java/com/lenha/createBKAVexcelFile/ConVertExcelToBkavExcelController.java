@@ -1251,6 +1251,7 @@ public class ConVertExcelToBkavExcelController implements Initializable {
             try {
 
                 String ketQua = ReadHoaDonExcelToBkavExcel.convertHoaDonExcelToBkavExcel(excelHoaDonFile.getAbsolutePath(), excelSanPhamChuanFile.getAbsolutePath(), excelBkavDir.getAbsolutePath(), bkavExcelNameTf.getText(), SetupData.getInstance().getSetup().getHeSo(), SetupData.getInstance().getExcelFile());
+                // nếu hàm trả về là lỗi tên sản phẩm hoặc lỗi chuyển dữ liêu thì thoát hàm vì đã xử lý lỗi này ở hàm chuyển rồi
                 if(ketQua.equals(LOI_SAN_PHAM_CHUAN) || ketQua.equals(LOI_DU_LIEU)){
                     return;
                 }

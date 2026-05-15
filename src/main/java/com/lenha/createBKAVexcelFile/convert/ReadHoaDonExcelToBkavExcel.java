@@ -184,8 +184,11 @@ public class ReadHoaDonExcelToBkavExcel {
                 excelBkav.close();
             }
 
-            // thêm tên file vào list các sheet của file để hiển thị tên file
-            excelFileNames.add(new ExcelFile(fileBkavName + ".xls", "", 0, 0));
+            if (ketQua.equals(THANH_CONG)) {
+                // thêm tên file vào list các sheet của file để hiển thị tên file
+                excelFileNames.add(new ExcelFile(fileBkavName + ".xls", "", 0, 0));
+            }
+
             return ketQua;
         }
 
@@ -203,20 +206,26 @@ public class ReadHoaDonExcelToBkavExcel {
 
         LinkedList<String[]> danhSachSP = new LinkedList<>();
 
+        // các cột thông tin cần lấy của file hóa đơn ban đầu
         int[] cacCotThongTin = {2, 6, 7, 12, 15, 17};
         int soCotThongTin = cacCotThongTin.length;
 
         // gọi hàm lấy danh sách các sản phẩm trong file hóa đơn ban đầu cho vào list danhSachSP
         getDanhSachSanSP(danhSachSP, cacCotThongTin, soCotThongTin, excelHoaDon);
 
+        // lấy sheet thông tin của excel bkav
         Sheet sheet0Bkav = excelBkav.getSheetAt(0);
+        // lấy ra số sản phẩm cần tạo từ danh sách sản phẩm đã lấy được từ excel hóa đơn
         int soSP = danhSachSP.size();
 
         System.out.println(soSP);
+        // tạo thêm các hàng mới để chứa sản phẩm theo số sản phẩm đã có
+        // tạo thêm hàng theo số sản phẩm - 3 vì đã có 3 hàng sản phẩm sẵn có trong file mẫu
         for (int i = 0; i < soSP - 3; i++) {
+            // hàng đang xét là 6 + i vì hàng sản phẩm bắt đầu cần copy là từ hàng 6
             int rowWritingIndex = 6 + i;
 
-            // chèm thêm một hàng xuống bên dưới
+            // chèm thêm một hàng xuống bên dưới copy cả style của hàng trên
             insertRowBelow(sheet0Bkav, 6 + i);
 
             Row rowWriting = sheet0Bkav.getRow(rowWritingIndex);
@@ -230,15 +239,20 @@ public class ReadHoaDonExcelToBkavExcel {
             // copy cả chiều cao dòng của dòng bên trên
             underRowWriting.setHeight((short) rowWritingHeight);
             for (int k = 0; k < 30; k++) {
+                // gọi hàm copy tất cả giá trị, công thức tự thay đổi của hàng trên xuống hàng dưới
+                // hàm này có thể không cần thiết
                 copyRowCellWithFormulaUpdate(rowWriting.getCell(k), underRowWriting.getCell(k), 1);
             }
         }
 
         // thứ tự cột cần nhập dữ liệu 1-12-16-2-4-5, cột sdt của hóa đơn ban đầu không có nên
         for (int i = 0; i < soSP; i++) {
+            // lấy hàng cần dán sản phẩm vào
             Row rowSpI = sheet0Bkav.getRow(5 + i);
+            // lấy sản phẩm cần dán
             String[] sanPham = danhSachSP.get(i);
 
+            // lấy ra các cell tại các cột cần dán thông tin sản phẩm trong excel bkav
             Cell oMaVanDon = rowSpI.getCell(1);
             Cell oHoTenNguoiMua = rowSpI.getCell(12);
             Cell oDiaChi = rowSpI.getCell(16);
@@ -246,8 +260,9 @@ public class ReadHoaDonExcelToBkavExcel {
             Cell oSoLuong = rowSpI.getCell(4);
             Cell oDonGia = rowSpI.getCell(5);
 
+            // dán thông tin sản phẩm đã lấy vào các ô tương ứng trong bkav
             try {
-                BigInteger maVanDonBig = new BigInteger(sanPham[0]);
+//                BigInteger maVanDonBig = new BigInteger(sanPham[0]);
                 String maVanDon = sanPham[0];
 
                 String tenNguoiMua = sanPham[1];
@@ -318,45 +333,75 @@ public class ReadHoaDonExcelToBkavExcel {
         return THANH_CONG;
     }
 
+    /**
+     * lấy danh sách các sản phẩm trong hóa đơn đầu vào
+     *
+     * @param danhSachSP
+     * @param cacCotThongTin
+     * @param soCotThongTin
+     * @param excelHoaDon
+     */
     private static void getDanhSachSanSP(LinkedList<String[]> danhSachSP, int[] cacCotThongTin, int soCotThongTin, Workbook excelHoaDon) {
         // lấy sheet 0 của excel hóa đơn
         Sheet sheet0HD = excelHoaDon.getSheetAt(0);
         // lấy hàng cuối chứa dữ liệu
         int latRowHD = sheet0HD.getLastRowNum();
 
+        // lặp qua các hàng sản phẩm và lưu nó vào list dưới dạng mảng
         for (int i = 1; i <= latRowHD; i++) {
             Row rowI = sheet0HD.getRow(i);
 
-
+            // tạo mảng chứa các thông tin của 1 sản phẩm
             String[] sanPham = new String[soCotThongTin];
 
             if (rowI != null) {
-                Cell oCotTenSanPham = rowI.getCell(12);
-                if (oCotTenSanPham == null || oCotTenSanPham.toString().isBlank()) {
+                // nếu ô tên sản phẩm null hoặc giá trị rỗng thì nhảy sang vòng lặp mới
+                Cell oTenSanPham = rowI.getCell(12);
+                if (oTenSanPham == null || oTenSanPham.toString().isBlank()) {
                     continue;
                 }
 
+                // thêm các thông tin của sản phẩm tại các cột có trong mảng các chỉ số cột thông tin
                 for (int j = 0; j < soCotThongTin; j++) {
+                    // lấy chỉ số cột tại mảng chứa thông tin các cột
                     int chiSoCotThongTin = cacCotThongTin[j];
+                    // lấy ra cell tại chỉ số cột đã lấy được
                     Cell cotThongTinJ = rowI.getCell(chiSoCotThongTin);
+                    // nếu cell null thì tạo cell
                     if (cotThongTinJ == null) {
                         cotThongTinJ = rowI.createCell(chiSoCotThongTin);
                     }
 
+                    // lấy giá trị tại cell chứa thông tin sản phẩm này
                     String duLieu = cotThongTinJ.toString();
 
                     // nếu ô có giá trị rỗng thì copy giá trị của ô hàng trên cho ô này
+                    // nếu ô tên sản phẩm rỗng thì sẽ không copy, điều này đã được đảm bảo nó mã ở trên là nếu ô tên sản phẩm rỗng hoặc null thì bỏ qua nhảy sang hàng tiếp theo
+                    //
+                    int hangChuaDuLieuGiongHangNay = -1;
                     if (duLieu.isBlank()) {
-                        Row hangTren = sheet0HD.getRow(i - 1);
-                        if (hangTren != null) {
-                            Cell oHangTren = hangTren.getCell(chiSoCotThongTin);
+                        for (int k = i; k > 0; k--) {
+                            Cell oMaVanDon = sheet0HD.getRow(k).getCell(2);
+                            if (oMaVanDon != null && !oMaVanDon.toString().isBlank()) {
+                                hangChuaDuLieuGiongHangNay = k;
+                                break;
+                            }
+                        }
+
+
+                        Row hangTrenChuaDuLieu = sheet0HD.getRow(hangChuaDuLieuGiongHangNay);
+                        if (hangTrenChuaDuLieu != null) {
+                            Cell oHangTren = hangTrenChuaDuLieu.getCell(chiSoCotThongTin);
                             duLieu = oHangTren.toString();
                         }
+
                     }
+                    // ghi thông tin sản phẩm tại ô đang lặp vào mảng chứa các thông tin sản phẩm
                     sanPham[j] = duLieu;
                 }
             }
 
+            // thêm sản phẩm vừa lấy được vào danh sách
             danhSachSP.add(sanPham);
         }
 
